@@ -1,0 +1,150 @@
+{
+  "name": "Center",
+  "description": "Centros educativos donde se realizan las evaluaciones",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string",
+      "description": "Nombre del centro educativo",
+      "required": true
+    },
+    {
+      "name": "code",
+      "type": "string",
+      "description": "Código único del centro",
+      "required": true,
+      "unique": true
+    },
+    {
+      "name": "phone",
+      "type": "string",
+      "description": "Teléfono de contacto",
+      "required": false
+    },
+    {
+      "name": "email",
+      "type": "email",
+      "description": "Email de contacto",
+      "required": false
+    },
+    {
+      "name": "responsable",
+      "type": "string",
+      "description": "Nombre del responsable del centro",
+      "required": false
+    },
+    {
+      "name": "type",
+      "type": "enum",
+      "description": "Tipo de centro educativo",
+      "options": ["publico", "concertado", "privado"],
+      "required": true
+    },
+    {
+      "name": "total_students",
+      "type": "number",
+      "description": "Capacidad total de estudiantes",
+      "required": false,
+      "min": 0
+    },
+    {
+      "name": "address",
+      "type": "string",
+      "description": "Dirección completa",
+      "required": true
+    },
+    {
+      "name": "country",
+      "type": "string",
+      "description": "País",
+      "required": false,
+      "default": "España"
+    },
+    {
+      "name": "autonomous_community",
+      "type": "string",
+      "description": "Comunidad autónoma",
+      "required": false
+    },
+    {
+      "name": "province",
+      "type": "string",
+      "description": "Provincia",
+      "required": false
+    },
+    {
+      "name": "city",
+      "type": "string",
+      "description": "Ciudad",
+      "required": false
+    },
+    {
+      "name": "postal_code",
+      "type": "string",
+      "description": "Código postal",
+      "required": false
+    },
+    {
+      "name": "latitude",
+      "type": "number",
+      "description": "Latitud para geolocalización",
+      "required": false
+    },
+    {
+      "name": "longitude",
+      "type": "number",
+      "description": "Longitud para geolocalización",
+      "required": false
+    },
+    {
+      "name": "contract_document_url",
+      "type": "string",
+      "description": "URL del documento de contrato",
+      "required": false
+    },
+    {
+      "name": "additional_documents",
+      "type": "array",
+      "description": "Array de documentos adicionales",
+      "required": false
+    },
+    {
+      "name": "observations",
+      "type": "text",
+      "description": "Observaciones sobre el centro",
+      "required": false
+    },
+    {
+      "name": "active",
+      "type": "boolean",
+      "description": "Centro activo en el sistema",
+      "required": true,
+      "default": true
+    }
+  ],
+  "indexes": [
+    {
+      "fields": ["type"],
+      "description": "Índice para filtrar por tipo de centro"
+    },
+    {
+      "fields": ["province"],
+      "description": "Índice para filtrar por provincia"
+    },
+    {
+      "fields": ["autonomous_community"],
+      "description": "Índice para filtrar por comunidad autónoma"
+    },
+    {
+      "fields": ["active"],
+      "description": "Índice para filtrar por estado activo"
+    }
+  ],
+  "permissions": {
+    "read": ["administrador", "clinica", "orientador", "examinador"],
+    "create": ["administrador"],
+    "update": ["administrador", "orientador"],
+    "delete": ["administrador"]
+  }
+}
+

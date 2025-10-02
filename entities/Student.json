@@ -1,0 +1,175 @@
+{
+  "name": "Student",
+  "description": "Alumnos evaluados en el sistema",
+  "fields": [
+    {
+      "name": "student_id",
+      "type": "string",
+      "description": "ID único visible del alumno (ej: STU_001)",
+      "required": true,
+      "unique": true
+    },
+    {
+      "name": "nia",
+      "type": "string",
+      "description": "Número de Identificación del Alumno (único)",
+      "required": false,
+      "unique": true
+    },
+    {
+      "name": "phone",
+      "type": "string",
+      "description": "Teléfono de contacto",
+      "required": false
+    },
+    {
+      "name": "dni",
+      "type": "string",
+      "description": "Documento de identidad",
+      "required": false
+    },
+    {
+      "name": "birth_date",
+      "type": "date",
+      "description": "Fecha de nacimiento",
+      "required": true
+    },
+    {
+      "name": "gender",
+      "type": "enum",
+      "description": "Género",
+      "options": ["masculino", "femenino", "otro", "no_especificado"],
+      "required": false
+    },
+    {
+      "name": "nationality",
+      "type": "string",
+      "description": "Nacionalidad",
+      "required": false,
+      "default": "España"
+    },
+    {
+      "name": "address_id",
+      "type": "string",
+      "description": "ID de la dirección (FK a Address)",
+      "required": false
+    },
+    {
+      "name": "etapa",
+      "type": "enum",
+      "description": "Etapa educativa",
+      "options": ["Educación Infantil", "Educación Primaria", "ESO", "Bachillerato", "Formación Profesional"],
+      "required": true
+    },
+    {
+      "name": "course",
+      "type": "string",
+      "description": "Curso académico",
+      "required": true
+    },
+    {
+      "name": "class_group",
+      "type": "string",
+      "description": "Grupo/clase específica",
+      "required": false
+    },
+    {
+      "name": "center_id",
+      "type": "string",
+      "description": "ID del centro educativo (FK a Center)",
+      "required": true
+    },
+    {
+      "name": "orientador_user_id",
+      "type": "string",
+      "description": "ID del orientador asignado (FK a User)",
+      "required": false
+    },
+    {
+      "name": "disability_degree",
+      "type": "number",
+      "description": "Grado de discapacidad (0-100)",
+      "required": false,
+      "min": 0,
+      "max": 100
+    },
+    {
+      "name": "special_educational_needs",
+      "type": "text",
+      "description": "Necesidades educativas especiales",
+      "required": false
+    },
+    {
+      "name": "medical_observations",
+      "type": "text",
+      "description": "Observaciones médicas",
+      "required": false
+    },
+    {
+      "name": "general_observations",
+      "type": "text",
+      "description": "Observaciones generales",
+      "required": false
+    },
+    {
+      "name": "consent_given",
+      "type": "enum",
+      "description": "Consentimiento parental dado",
+      "options": ["Sí", "No", "Pendiente", "N/A"],
+      "required": true,
+      "default": "Pendiente"
+    },
+    {
+      "name": "payment_type",
+      "type": "enum",
+      "description": "Tipo de pago",
+      "options": ["B2B", "B2B2C", "N/A"],
+      "required": true,
+      "default": "N/A"
+    },
+    {
+      "name": "payment_status",
+      "type": "enum",
+      "description": "Estado del pago",
+      "options": ["Pagado", "Pendiente", "N/A"],
+      "required": true,
+      "default": "N/A"
+    },
+    {
+      "name": "active",
+      "type": "boolean",
+      "description": "Alumno activo en el sistema",
+      "required": true,
+      "default": true
+    }
+  ],
+  "indexes": [
+    {
+      "fields": ["center_id"],
+      "description": "Índice para filtrar por centro"
+    },
+    {
+      "fields": ["etapa"],
+      "description": "Índice para filtrar por etapa educativa"
+    },
+    {
+      "fields": ["orientador_user_id"],
+      "description": "Índice para filtrar por orientador"
+    },
+    {
+      "fields": ["consent_given"],
+      "description": "Índice para filtrar por estado de consentimiento"
+    },
+    {
+      "fields": ["payment_type"],
+      "description": "Índice para filtrar por tipo de pago"
+    }
+  ],
+  "permissions": {
+    "read": ["administrador", "clinica", "orientador", "familia"],
+    "create": ["administrador", "clinica", "orientador"],
+    "update": ["administrador", "clinica", "orientador"],
+    "delete": ["administrador"]
+  }
+}
+

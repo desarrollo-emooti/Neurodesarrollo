@@ -1,0 +1,337 @@
+import { Request, Response, NextFunction } from 'express';
+import { PrismaClient, AuditAction } from '@prisma/client';
+import RGPDService from '../services/rgpdService';
+import { logger } from '../utils/logger';
+
+const prisma = new PrismaClient();
+
+// Extend Request interface
+declare global {
+  namespace Express {
+    interface Request {
+      rgpdAudit?: {
+        action: AuditAction;
+        entityType: string;
+        entityId?: string;
+        details?: any;
+      };
+    }
+  }
+}
+
+// RGPD Audit middleware
+export const rgpdAudit = (action: AuditAction, entityType: string) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    // Store audit information in request
+    req.rgpdAudit = {
+      action,
+      entityType,
+      entityId: req.params.id,
+      details: {
+        method: req.method,
+        url: req.url,
+        body: req.method !== 'GET' ? req.body : undefined,
+        query: req.query,
+        userAgent: req.get('User-Agent'),
+        ipAddress: req.ip || req.connection.remoteAddress,
+      },
+    };
+
+    next();
+  };
+};
+
+// Post-response audit logging
+export const logRGPDAudit = async (req: Request, res: Response, next: NextFunction) => {
+  const originalSend = res.send;
+  
+  res.send = function(data) {
+    // Log audit after response is sent
+    if (req.rgpdAudit && req.user?.id) {
+      setImmediate(async () => {
+        try {
+          await RGPDService.logAuditEvent(
+            req.user.id,
+            req.rgpdAudit.action,
+            req.rgpdAudit.entityType,
+            req.rgpdAudit.entityId || null,
+            {
+              ...req.rgpdAudit.details,
+              responseStatus: res.statusCode,
+              responseTime: Date.now() - (req as any).startTime,
+            },
+            req.ip || req.connection.remoteAddress,
+            req.get('User-Agent')
+          );
+        } catch (error) {
+          logger.error('Error logging RGPD audit:', error);
+        }
+      });
+    }
+    
+    return originalSend.call(this, data);
+  };
+
+  next();
+};
+
+// Anomaly detection middleware
+export const detectAnomalies = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user?.id) {
+    return next();
+  }
+
+  try {
+    const userId = req.user.id;
+    const action = req.method + ' ' + req.route?.path || req.path;
+    
+    // Calculate risk score based on various factors
+    let riskScore = 0;
+    
+    // High-risk actions
+    if (req.method === 'DELETE') riskScore += 30;
+    if (req.method === 'POST' && req.path.includes('/bulk')) riskScore += 25;
+    if (req.path.includes('/export')) riskScore += 20;
+    if (req.path.includes('/import')) riskScore += 20;
+    
+    // Time-based anomalies (requests outside business hours)
+    const hour = new Date().getHours();
+    if (hour < 8 || hour > 18) riskScore += 15;
+    
+    // Weekend requests
+    const dayOfWeek = new Date().getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) riskScore += 10;
+    
+    // Multiple requests from same user in short time
+    const recentRequests = await prisma.auditLog.count({
+      where: {
+        userId,
+        timestamp: {
+          gte: new Date(Date.now() - 5 * 60 * 1000), // Last 5 minutes
+        },
+      },
+    });
+    
+    if (recentRequests > 10) riskScore += 20;
+    if (recentRequests > 20) riskScore += 30;
+    
+    // Large data requests
+    if (req.query.limit && parseInt(req.query.limit as string) > 100) {
+      riskScore += 15;
+    }
+    
+    // Access to sensitive data
+    if (req.path.includes('/security') || req.path.includes('/audit')) {
+      riskScore += 25;
+    }
+    
+    // If risk score is above threshold, log anomaly
+    if (riskScore > 30) {
+      await RGPDService.detectAnomaly(
+        userId,
+        action,
+        {
+          riskScore,
+          factors: {
+            method: req.method,
+            path: req.path,
+            time: new Date().toISOString(),
+            recentRequests,
+            queryParams: req.query,
+          },
+        },
+        riskScore
+      );
+    }
+  } catch (error) {
+    logger.error('Error in anomaly detection:', error);
+  }
+
+  next();
+};
+
+// Data minimization middleware
+export const dataMinimization = (allowedFields: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (req.method === 'GET' && req.query.fields) {
+      const requestedFields = (req.query.fields as string).split(',');
+      const filteredFields = requestedFields.filter(field => 
+        allowedFields.includes(field)
+      );
+      req.query.fields = filteredFields.join(',');
+    }
+    
+    next();
+  };
+};
+
+// Consent verification middleware
+export const verifyConsent = (consentType: string) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user?.id) {
+      return next();
+    }
+
+    try {
+      const consent = await prisma.consent.findFirst({
+        where: {
+          userId: req.user.id,
+          consentType,
+          given: true,
+        },
+        orderBy: {
+          recordedAt: 'desc',
+        },
+      });
+
+      if (!consent) {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'CONSENT_REQUIRED',
+            message: `Consent required for ${consentType}`,
+          },
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Check if consent is still valid (e.g., not expired)
+      const consentAge = Date.now() - consent.recordedAt.getTime();
+      const maxAge = 365 * 24 * 60 * 60 * 1000; // 1 year in milliseconds
+      
+      if (consentAge > maxAge) {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'CONSENT_EXPIRED',
+            message: `Consent for ${consentType} has expired`,
+          },
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      next();
+    } catch (error) {
+      logger.error('Error verifying consent:', error);
+      next();
+    }
+  };
+};
+
+// Data retention check middleware
+export const checkDataRetention = (entityType: string) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const policy = await prisma.retentionPolicy.findFirst({
+        where: {
+          entityType,
+          status: 'ACTIVE',
+        },
+      });
+
+      if (policy) {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - policy.retentionPeriodDays);
+        
+        // Add retention filter to query
+        if (!req.query.retentionFilter) {
+          req.query.retentionFilter = 'true';
+          req.query.retentionCutoffDate = cutoffDate.toISOString();
+        }
+      }
+
+      next();
+    } catch (error) {
+      logger.error('Error checking data retention:', error);
+      next();
+    }
+  };
+};
+
+// Pseudonymization middleware
+export const pseudonymizeData = (fields: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const originalSend = res.send;
+    
+    res.send = function(data) {
+      try {
+        if (data && typeof data === 'string') {
+          const parsedData = JSON.parse(data);
+          
+          if (parsedData.data) {
+            const pseudonymizeObject = (obj: any) => {
+              if (Array.isArray(obj)) {
+                return obj.map(pseudonymizeObject);
+              } else if (obj && typeof obj === 'object') {
+                const result = { ...obj };
+                fields.forEach(field => {
+                  if (result[field]) {
+                    result[field] = RGPDService.generatePseudonym(result[field]);
+                  }
+                });
+                return result;
+              }
+              return obj;
+            };
+            
+            parsedData.data = pseudonymizeObject(parsedData.data);
+            data = JSON.stringify(parsedData);
+          }
+        }
+      } catch (error) {
+        logger.error('Error pseudonymizing data:', error);
+      }
+      
+      return originalSend.call(this, data);
+    };
+
+    next();
+  };
+};
+
+// Data subject rights middleware
+export const enforceDataSubjectRights = async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user?.id) {
+    return next();
+  }
+
+  try {
+    // Check if user has pending data subject requests
+    const pendingRequests = await prisma.dataSubjectRequest.findMany({
+      where: {
+        userId: req.user.id,
+        status: 'PENDING',
+      },
+    });
+
+    // If user has pending erasure request, restrict access
+    const erasureRequest = pendingRequests.find(req => req.requestType === 'ERASURE');
+    if (erasureRequest) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'DATA_ERASURE_PENDING',
+          message: 'Data erasure request is pending. Access restricted.',
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error enforcing data subject rights:', error);
+    next();
+  }
+};
+
+export default {
+  rgpdAudit,
+  logRGPDAudit,
+  detectAnomalies,
+  dataMinimization,
+  verifyConsent,
+  checkDataRetention,
+  pseudonymizeData,
+  enforceDataSubjectRights,
+};
+

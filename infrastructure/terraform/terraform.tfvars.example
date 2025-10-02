@@ -1,0 +1,46 @@
+# EMOOTI AWS Infrastructure - Terraform Variables Example
+# =====================================================
+# Copy this file to terraform.tfvars and fill in your values
+
+# AWS Configuration
+aws_region     = "eu-west-1"
+aws_account_id = "123456789012"  # Replace with your AWS Account ID
+
+# Project Configuration
+project_name = "emooti"
+environment  = "production"  # or "development", "staging"
+
+# Database Configuration
+database_name     = "emooti_db"
+database_username = "emooti_user"
+database_password = "your_secure_database_password_here"  # Use a strong password
+
+# Security Configuration
+jwt_secret = "your_super_secure_jwt_secret_key_here_minimum_32_characters"
+
+# VPC Configuration (optional - defaults are usually fine)
+vpc_cidr = "10.0.0.0/16"
+
+# Database Configuration (optional)
+postgres_engine_version = "15.4"
+db_instance_class      = "db.r6g.large"
+db_instance_count      = 2
+
+# ECS Configuration (optional)
+ecs_cpu           = 512
+ecs_memory        = 1024
+ecs_desired_count = 2
+
+# Security Settings (optional)
+enable_deletion_protection = true
+skip_final_snapshot       = false
+
+# Logging Configuration (optional)
+log_retention_days = 30
+
+# Additional Tags (optional)
+additional_tags = {
+  Owner       = "EMOOTI Hub SL"
+  Project     = "EMOOTI"
+  Environment = "production"
+}

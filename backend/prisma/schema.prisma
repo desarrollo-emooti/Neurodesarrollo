@@ -1,0 +1,1184 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==============================================
+// CORE ENTITIES
+// ==============================================
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  fullName          String   @map("full_name")
+  phone             String?
+  dni               String?  @unique
+  birthDate         DateTime? @map("birth_date") @db.Date
+  nationality       String?
+  userType          UserType @map("user_type")
+  status            UserStatus @default(ACTIVE)
+  address           String?
+  country           String?
+  autonomousCommunity String? @map("autonomous_community")
+  province          String?
+  city              String?
+  postalCode        String?  @map("postal_code")
+  centerId          String?  @map("center_id")
+  centerIds         String[] @map("center_ids")
+  specialty         String?
+  licenseNumber     String?  @map("license_number")
+  allowedEtapas     String[] @map("allowed_etapas")
+  allowedCourses    String[] @map("allowed_courses")
+  allowedGroups     String[] @map("allowed_groups")
+  paymentMethod     String?  @map("payment_method")
+  bankIban          String?  @map("bank_iban")
+  bankName          String?  @map("bank_name")
+  stripeCustomerId  String?  @map("stripe_customer_id")
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  createdBy         String?  @map("created_by")
+
+  // Relations
+  center            Center?  @relation(fields: [centerId], references: [id])
+  students          Student[] @relation("StudentOrientador")
+  testResults       TestResult[] @relation("TestResultExaminer")
+  agendaEvents      AgendaEvent[] @relation("AgendaEventExaminer")
+  auditLogs         AuditLog[]
+  anomalyAlerts     AnomalyAlert[]
+  createdUsers      User[] @relation("UserCreatedBy", fields: [createdBy], references: [id])
+  createdByUser     User? @relation("UserCreatedBy", fields: [createdBy], references: [id])
+
+  @@map("users")
+}
+
+model Student {
+  id                    String   @id @default(cuid())
+  studentId             String   @unique @map("student_id")
+  nia                   String?  @unique
+  fullName              String   @map("full_name")
+  phone                 String?
+  dni                   String?
+  birthDate             DateTime @map("birth_date") @db.Date
+  gender                String?
+  nationality           String?
+  addressId             String?  @map("address_id")
+  etapa                 Etapa
+  course                String
+  classGroup            String   @map("class_group")
+  centerId              String   @map("center_id")
+  orientadorUserId      String?  @map("orientador_user_id")
+  disabilityDegree      Int?     @map("disability_degree")
+  specialEducationalNeeds String? @map("special_educational_needs")
+  medicalObservations   String?  @map("medical_observations")
+  generalObservations   String?  @map("general_observations")
+  consentGiven          ConsentStatus @map("consent_given") @default(PENDING)
+  paymentType           PaymentType @map("payment_type") @default(NA)
+  paymentStatus         PaymentStatus @map("payment_status") @default(NA)
+  active                Boolean  @default(true)
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  createdBy             String?  @map("created_by")
+
+  // Relations
+  address               Address? @relation(fields: [addressId], references: [id])
+  center                Center   @relation(fields: [centerId], references: [id])
+  orientador            User?    @relation("StudentOrientador", fields: [orientadorUserId], references: [id])
+  testAssignments       TestAssignment[]
+  testResults           TestResult[]
+  emotiTestResults      EmotiTestResult[]
+  batelleResults        BatelleSCR[]
+  circuitoLogopediaResults CircuitoLogopedia[]
+  circuitoSensoriomotorResults CircuitoSensoriomotor[]
+  e2pResults            E2P[]
+  familyRelations       StudentFamilyRelation[]
+  subscriptionStudents  SubscriptionConfiguration[] @relation("SubscriptionStudents")
+
+  @@map("students")
+}
+
+model Center {
+  id                    String   @id @default(cuid())
+  name                  String
+  code                  String   @unique
+  phone                 String?
+  email                 String?
+  responsable           String?
+  type                  CenterType
+  totalStudents         Int?     @map("total_students")
+  address               String?
+  country               String?
+  autonomousCommunity   String?  @map("autonomous_community")
+  province              String?
+  city                  String?
+  postalCode            String?  @map("postal_code")
+  contractDocumentUrl   String?  @map("contract_document_url")
+  additionalDocuments   Json?    @map("additional_documents")
+  observations          String?
+  active                Boolean  @default(true)
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  createdBy             String?  @map("created_by")
+
+  // Relations
+  users                 User[]
+  students              Student[]
+  agendaEvents          AgendaEvent[]
+  devices               Device[]
+  subscriptionConfigurations SubscriptionConfiguration[]
+
+  @@map("centers")
+}
+
+model Address {
+  id                    String   @id @default(cuid())
+  street                String
+  number                String?
+  floor                 String?
+  door                  String?
+  postalCode            String   @map("postal_code")
+  city                  String
+  province              String
+  autonomousCommunity   String   @map("autonomous_community")
+  country               String   @default("España")
+  latitude              Float?
+  longitude             Float?
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  students              Student[]
+
+  @@map("addresses")
+}
+
+model TestAssignment {
+  id                String   @id @default(cuid())
+  studentId         String   @map("student_id")
+  testTitle         String   @map("test_title")
+  testLink          String?  @map("test_link")
+  testDate          DateTime? @map("test_date")
+  completionDate    DateTime? @map("completion_date")
+  assignedBy        String   @map("assigned_by")
+  assignedDate      DateTime @default(now()) @map("assigned_date")
+  testStatus        TestStatus @map("test_status") @default(PENDING)
+  consentGiven      ConsentStatus @map("consent_given") @default(PENDING)
+  priority          Priority @default(MEDIUM)
+  notes             String?
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student  @relation(fields: [studentId], references: [id])
+  testResults       TestResult[]
+
+  @@map("test_assignments")
+}
+
+model TestResult {
+  id                String   @id @default(cuid())
+  resultId          String   @unique @map("result_id")
+  assignmentId      String?  @map("assignment_id")
+  studentId         String   @map("student_id")
+  testName          String   @map("test_name")
+  testCode          String   @unique @map("test_code")
+  academicYear      String   @map("academic_year")
+  originalPdfUrl    String?  @map("original_pdf_url")
+  examinerId        String?  @map("examiner_id")
+  executionDate     DateTime @map("execution_date")
+  rawScore          Float?   @map("raw_score")
+  percentile        Int?
+  standardScore     Float?   @map("standard_score")
+  interpretation    Interpretation?
+  detailedResults   Json?    @map("detailed_results")
+  observations      String?
+  incidents         String?
+  validated         Boolean  @default(false)
+  validatedBy       String?  @map("validated_by")
+  validationDate    DateTime? @map("validation_date")
+  importSource      ImportSource @map("import_source")
+  testVersion       String?  @map("test_version")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  assignment        TestAssignment? @relation(fields: [assignmentId], references: [id])
+  student           Student  @relation(fields: [studentId], references: [id])
+  examiner          User?    @relation("TestResultExaminer", fields: [examinerId], references: [id])
+  stap2GoResult     Stap2GoResult?
+  ravens2Result     Ravens2Result?
+
+  @@map("test_results")
+}
+
+// ==============================================
+// EMOOTI TESTS
+// ==============================================
+
+model EmotiTest {
+  id                String   @id @default(cuid())
+  testType          EmotiTestType @map("test_type")
+  configuration     Json
+  htmlContent       String?  @map("html_content")
+  version           String   @default("1.0")
+  createdBy         String   @map("created_by")
+  lastModified      DateTime @default(now()) @map("last_modified")
+  isActive          Boolean  @default(true) @map("is_active")
+  description       String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  emotiTestResults  EmotiTestResult[]
+
+  @@map("emoti_tests")
+}
+
+model EmotiTestResult {
+  id                String   @id @default(cuid())
+  studentId         String   @map("student_id")
+  testType          EmotiTestType @map("test_type")
+  testDate          DateTime @map("test_date")
+  ageAtTest         Int      @map("age_at_test")
+  academicYear      String   @map("academic_year")
+  rawResponses      Json     @map("raw_responses")
+  totalScore        Int      @map("total_score")
+  completionTimeSeconds Int  @map("completion_time_seconds")
+  status            EmotiTestStatus @default(COMPLETED)
+  ipAddress         String?  @map("ip_address")
+  userAgent         String?  @map("user_agent")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student  @relation(fields: [studentId], references: [id])
+
+  @@map("emoti_test_results")
+}
+
+model BatelleSCR {
+  id                String   @id @default(cuid())
+  studentId         String   @map("student_id")
+  tipoPrueba        String   @map("tipo_prueba")
+  idPrueba          String   @map("id_prueba")
+  testDate          DateTime @map("test_date")
+  plannedDate       DateTime? @map("planned_date")
+  status            BatelleStatus @default(PLANNED)
+  grupoEdad         String   @map("grupo_edad")
+  patientName       String   @map("patient_name")
+  centerName        String   @map("center_name")
+  etapa             String
+  course            String
+  classGroup        String   @map("class_group")
+  resultadosPersonalSocial Json? @map("resultados_personal_social")
+  resultadosAdaptativo Json? @map("resultados_adaptativo")
+  resultadosMotor   Json?    @map("resultados_motor")
+  resultadosComunicacion Json? @map("resultados_comunicacion")
+  resultadosCognitivo Json? @map("resultados_cognitivo")
+  puntuacionTotal   Int?     @map("puntuacion_total")
+  examinerId        String?  @map("examiner_id")
+  observations      String?
+  academicYear      String   @map("academic_year")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student  @relation(fields: [studentId], references: [id])
+
+  @@map("batelle_scr")
+}
+
+model CircuitoLogopedia {
+  id                String   @id @default(cuid())
+  studentId         String   @map("student_id")
+  tipoPrueba        String   @map("tipo_prueba")
+  idPrueba          String   @map("id_prueba")
+  testDate          DateTime @map("test_date")
+  plannedDate       DateTime? @map("planned_date")
+  status            CircuitoStatus @default(PLANNED)
+  grupoEdad         String   @map("grupo_edad")
+  patientName       String   @map("patient_name")
+  centerName        String   @map("center_name")
+  etapa             String
+  course            String
+  classGroup        String   @map("class_group")
+  resultadosArticulacion Json? @map("resultados_articulacion")
+  resultadosFluencia Json? @map("resultados_fluencia")
+  resultadosVocabulario Json? @map("resultados_vocabulario")
+  resultadosComprension Json? @map("resultados_comprension")
+  puntuacionTotal   Int?     @map("puntuacion_total")
+  examinerId        String?  @map("examiner_id")
+  observations      String?
+  academicYear      String   @map("academic_year")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student  @relation(fields: [studentId], references: [id])
+
+  @@map("circuito_logopedia")
+}
+
+model CircuitoSensoriomotor {
+  id                String   @id @default(cuid())
+  studentId         String   @map("student_id")
+  tipoPrueba        String   @map("tipo_prueba")
+  idPrueba          String   @map("id_prueba")
+  testDate          DateTime @map("test_date")
+  plannedDate       DateTime? @map("planned_date")
+  status            CircuitoStatus @default(PLANNED)
+  grupoEdad         String   @map("grupo_edad")
+  patientName       String   @map("patient_name")
+  centerName        String   @map("center_name")
+  etapa             String
+  course            String
+  classGroup        String   @map("class_group")
+  resultadosMotricidadGruesa Json? @map("resultados_motricidad_gruesa")
+  resultadosMotricidadFina Json? @map("resultados_motricidad_fina")
+  resultadosCoordinacion Json? @map("resultados_coordinacion")
+  resultadosPercepcion Json? @map("resultados_percepcion")
+  puntuacionTotal   Int?     @map("puntuacion_total")
+  examinerId        String?  @map("examiner_id")
+  observations      String?
+  academicYear      String   @map("academic_year")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student  @relation(fields: [studentId], references: [id])
+
+  @@map("circuito_sensoriomotor")
+}
+
+model E2P {
+  id                String   @id @default(cuid())
+  studentId         String   @map("student_id")
+  tipoPrueba        String   @map("tipo_prueba")
+  idPrueba          String   @map("id_prueba")
+  testDate          DateTime @map("test_date")
+  plannedDate       DateTime? @map("planned_date")
+  status            E2PStatus @default(PLANNED)
+  grupoEdad         String   @map("grupo_edad")
+  patientName       String   @map("patient_name")
+  centerName        String   @map("center_name")
+  etapa             String
+  course            String
+  classGroup        String   @map("class_group")
+  resultadosAtencion Json? @map("resultados_atencion")
+  resultadosMemoria Json? @map("resultados_memoria")
+  resultadosFuncionesEjecutivas Json? @map("resultados_funciones_ejecutivas")
+  resultadosVelocidadProcesamiento Json? @map("resultados_velocidad_procesamiento")
+  puntuacionTotal   Int?     @map("puntuacion_total")
+  examinerId        String?  @map("examiner_id")
+  observations      String?
+  academicYear      String   @map("academic_year")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student  @relation(fields: [studentId], references: [id])
+
+  @@map("e2p")
+}
+
+// ==============================================
+// TRADITIONAL TEST RESULTS
+// ==============================================
+
+model Stap2GoResult {
+  id                String   @id @default(cuid())
+  studentId         String   @map("student_id")
+  testResultId      String   @unique @map("test_result_id")
+  codigoInforme     String   @map("codigo_informe")
+  fechaInforme      DateTime @map("fecha_informe")
+  academicYear      String   @map("academic_year")
+  baremo            String
+  rellenadoPor      String   @map("rellenado_por")
+  cuestionarioInatencionPd Float? @map("cuestionario_inatencion_pd")
+  cuestionarioImpulsividadPd Float? @map("cuestionario_impulsividad_pd")
+  cuestionarioHiperactividadPd Float? @map("cuestionario_hiperactividad_pd")
+  cuestionarioTotalPd Float? @map("cuestionario_total_pd")
+  tareaInatencionPd Float? @map("tarea_inatencion_pd")
+  tareaInatencionT  Float?   @map("tarea_inatencion_t")
+  tareaInatencionNivel String? @map("tarea_inatencion_nivel")
+  processedDate     DateTime @default(now()) @map("processed_date")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  testResult        TestResult @relation(fields: [testResultId], references: [id])
+
+  @@map("stap2go_results")
+}
+
+model Ravens2Result {
+  id                String   @id @default(cuid())
+  studentId         String   @map("student_id")
+  testResultId      String   @unique @map("test_result_id")
+  examineeName      String   @map("examinee_name")
+  academicYear      String   @map("academic_year")
+  puntuacionDirectaTotal Int @map("puntuacion_directa_total")
+  puntuacionAptitud Float   @map("puntuacion_aptitud")
+  puntuacionTipica  Float   @map("puntuacion_tipica")
+  percentil         Int
+  intervaloConfianza90 String @map("intervalo_confianza_90")
+  estanino          Int
+  clasificacionCualitativa RavensClassification @map("clasificacion_cualitativa")
+  processedDate     DateTime @default(now()) @map("processed_date")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  testResult        TestResult @relation(fields: [testResultId], references: [id])
+
+  @@map("ravens2_results")
+}
+
+// ==============================================
+// AGENDA AND RESOURCES
+// ==============================================
+
+model AgendaEvent {
+  id                    String   @id @default(cuid())
+  title                 String
+  description           String?
+  eventType             EventType @map("event_type")
+  centerId              String   @map("center_id")
+  startDate             DateTime @map("start_date")
+  endDate               DateTime @map("end_date")
+  location              String?
+  assignedExaminerId    String?  @map("assigned_examiner_id")
+  estimatedStudents     Int?     @map("estimated_students")
+  testsToApply          Json?    @map("tests_to_apply")
+  reservedDeviceIds     String[] @map("reserved_device_ids")
+  approvalStatus        ApprovalStatus @map("approval_status") @default(PENDING_APPROVAL)
+  approvedBy            String?  @map("approved_by")
+  approvalDate          DateTime? @map("approval_date")
+  orientadorComments    String?  @map("orientador_comments")
+  requestedChanges      String?  @map("requested_changes")
+  createdBy             String   @map("created_by")
+  priority              Priority @default(MEDIUM)
+  recurring             Boolean  @default(false)
+  active                Boolean  @default(true)
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  center                Center   @relation(fields: [centerId], references: [id])
+  assignedExaminer      User?    @relation("AgendaEventExaminer", fields: [assignedExaminerId], references: [id])
+
+  @@map("agenda_events")
+}
+
+model Device {
+  id                String   @id @default(cuid())
+  name              String
+  type              DeviceType
+  serial            String   @unique
+  model             String?
+  centerId          String   @map("center_id")
+  location          String?
+  status            DeviceStatus @default(ACTIVE)
+  usageStatus       UsageStatus @map("usage_status") @default(FREE)
+  lastStatusUpdate  DateTime @default(now()) @map("last_status_update")
+  inventoryItemId   String?  @map("inventory_item_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  center            Center   @relation(fields: [centerId], references: [id])
+  inventoryItem     InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  reservations      DeviceReservation[]
+
+  @@map("devices")
+}
+
+model DeviceReservation {
+  id                String   @id @default(cuid())
+  deviceId          String   @map("device_id")
+  agendaEventId     String?  @map("agenda_event_id")
+  startDate         DateTime @map("start_date")
+  endDate           DateTime @map("end_date")
+  reservedBy        String   @map("reserved_by")
+  status            ReservationStatus @default(ACTIVE)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  device            Device   @relation(fields: [deviceId], references: [id])
+
+  @@map("device_reservations")
+}
+
+model InventoryItem {
+  id                    String   @id @default(cuid())
+  code                  String   @unique
+  name                  String
+  category              InventoryCategory
+  itemType              String?  @map("item_type")
+  inventoryNumber       String?  @map("inventory_number")
+  status                InventoryStatus @default(FREE)
+  location              String?
+  maintenanceLocation   String?  @map("maintenance_location")
+  purchaseDate          DateTime? @map("purchase_date") @db.Date
+  serialNumber          String?  @map("serial_number")
+  stockControlEnabled   Boolean  @default(false) @map("stock_control_enabled")
+  stock                 Int?     @default(0)
+  stockMinimo           Int?     @map("stock_minimo")
+  supplier              String?
+  supplierWebsite       String?  @map("supplier_website")
+  supplierEmail         String?  @map("supplier_email")
+  supplierPhone         String?  @map("supplier_phone")
+  testType              TestType? @map("test_type")
+  requiresStaff         Boolean  @default(false) @map("requires_staff")
+  requiresTablet        Boolean  @default(false) @map("requires_tablet")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  devices              Device[]
+
+  @@map("inventory_items")
+}
+
+// ==============================================
+// FINANCIAL
+// ==============================================
+
+model SubscriptionConfiguration {
+  id                String   @id @default(cuid())
+  name              String
+  paymentType       PaymentType @map("payment_type")
+  centerId          String?  @map("center_id")
+  recipientName     String   @map("recipient_name")
+  recipientEmail    String   @map("recipient_email")
+  studentIds        String[] @map("student_ids")
+  pricePerStudent   Float    @map("price_per_student")
+  startDate         DateTime @map("start_date")
+  nextBillingDate   DateTime? @map("next_billing_date")
+  isRecurring       Boolean  @default(false) @map("is_recurring")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdBy         String   @map("created_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  center            Center?  @relation(fields: [centerId], references: [id])
+  students          Student[] @relation("SubscriptionStudents")
+  billings          SubscriptionBilling[]
+
+  @@map("subscription_configurations")
+}
+
+model SubscriptionBilling {
+  id                String   @id @default(cuid())
+  subscriptionConfigId String? @map("subscription_config_id")
+  billingType       BillingType @map("billing_type")
+  billingPeriod     String   @map("billing_period")
+  billingDate       DateTime @map("billing_date")
+  recipientName     String   @map("recipient_name")
+  recipientEmail    String   @map("recipient_email")
+  studentDetails    Json     @map("student_details")
+  numberOfStudents  Int      @map("number_of_students")
+  pricePerStudent   Float    @map("price_per_student")
+  totalAmount       Float    @map("total_amount")
+  status            BillingStatus @default(PENDING)
+  sentDate          DateTime? @map("sent_date")
+  paidDate          DateTime? @map("paid_date")
+  generatedAutomatically Boolean @default(false) @map("generated_automatically")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  subscriptionConfig SubscriptionConfiguration? @relation(fields: [subscriptionConfigId], references: [id])
+  invoices          Invoice[]
+
+  @@map("subscription_billings")
+}
+
+model Invoice {
+  id                String   @id @default(cuid())
+  invoiceNumber     String   @unique @map("invoice_number")
+  invoiceSeries     String   @map("invoice_series")
+  invoiceYear       Int      @map("invoice_year")
+  invoiceDate       DateTime @map("invoice_date")
+  billingIds        String[] @map("billing_ids")
+  clientType        ClientType @map("client_type")
+  clientName        String   @map("client_name")
+  clientCifDni      String   @map("client_cif_dni")
+  clientAddress     String   @map("client_address")
+  clientEmail       String   @map("client_email")
+  concept           String
+  subtotal          Float
+  vatRate           Float    @map("vat_rate")
+  vatAmount         Float    @map("vat_amount")
+  totalAmount       Float    @map("total_amount")
+  paymentDetails    Json     @map("payment_details")
+  status            InvoiceStatus @default(ISSUED)
+  pdfUrl            String?  @map("pdf_url")
+  isCreditNote      Boolean  @default(false) @map("is_credit_note")
+  originalInvoiceId String?  @map("original_invoice_id")
+  rectifyingInvoiceId String? @map("rectifying_invoice_id")
+  paymentMethod     PaymentMethod @map("payment_method") @default(INTERNAL)
+  stripeInvoiceId   String?  @map("stripe_invoice_id")
+  stripeCustomerId  String?  @map("stripe_customer_id")
+  stripeHostedInvoiceUrl String? @map("stripe_hosted_invoice_url")
+  stripeInvoicePdfUrl String? @map("stripe_invoice_pdf_url")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  subscriptionBillings SubscriptionBilling[] @relation("InvoiceBillings")
+
+  @@map("invoices")
+}
+
+// ==============================================
+// RGPD & SECURITY
+// ==============================================
+
+model AuditLog {
+  id                String   @id @default(cuid())
+  userId            String?  @map("user_id")
+  action            AuditAction
+  resourceType      String?  @map("resource_type")
+  resourceId        String?  @map("resource_id")
+  details           Json?
+  ipAddress         String?  @map("ip_address")
+  userAgent         String?  @map("user_agent")
+  sessionId         String?  @map("session_id")
+  timestamp         DateTime @default(now())
+  integrityHash     String   @map("integrity_hash")
+  previousHash      String?  @map("previous_hash")
+  immutable         Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user              User?    @relation(fields: [userId], references: [id])
+  anomalyAlerts     AnomalyAlert[]
+
+  @@map("audit_logs")
+}
+
+model AnomalyAlert {
+  id                String   @id @default(cuid())
+  type              AnomalyType
+  severity          Severity
+  description       String
+  userId            String?  @map("user_id")
+  logId             String?  @map("log_id")
+  metadata          Json?
+  detectedAt        DateTime @default(now()) @map("detected_at")
+  status            AlertStatus @default(ACTIVE)
+  resolvedBy        String?  @map("resolved_by")
+  resolvedAt        DateTime? @map("resolved_at")
+  resolutionNotes   String?  @map("resolution_notes")
+  immutable         Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user              User?    @relation(fields: [userId], references: [id])
+  auditLog          AuditLog? @relation(fields: [logId], references: [id])
+
+  @@map("anomaly_alerts")
+}
+
+model PseudonymMapping {
+  id                String   @id @default(cuid())
+  entityType        String   @map("entity_type")
+  entityId          String   @map("entity_id")
+  fieldName         String   @map("field_name")
+  pseudonym         String
+  originalValueHash String   @map("original_value_hash")
+  encryptionKeyVersion String @map("encryption_key_version")
+  createdBy         String   @map("created_by")
+  accessedCount     Int      @default(0) @map("accessed_count")
+  lastAccessed      DateTime? @map("last_accessed")
+  immutable         Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("pseudonym_mappings")
+}
+
+model RetentionPolicy {
+  id                String   @id @default(cuid())
+  entityType        String   @map("entity_type")
+  retentionYears    Int      @map("retention_years")
+  triggerField      String   @map("trigger_field")
+  description       String
+  legalBasis        String   @map("legal_basis")
+  autoApply         Boolean  @default(false) @map("auto_apply")
+  gracePeriodDays   Int      @default(30) @map("grace_period_days")
+  notifyBeforeDays  Int      @default(7) @map("notify_before_days")
+  status            PolicyStatus @default(ACTIVE)
+  createdBy         String   @map("created_by")
+  lastApplied       DateTime? @map("last_applied")
+  immutable         Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("retention_policies")
+}
+
+model DataRetentionJob {
+  id                String   @id @default(cuid())
+  entityType        String   @map("entity_type")
+  policyApplied     Json     @map("policy_applied")
+  recordsEligible   Int      @map("records_eligible")
+  recordsDeleted    Int      @map("records_deleted")
+  cutoffDate        DateTime @map("cutoff_date")
+  scheduledFor      DateTime @map("scheduled_for")
+  executedAt        DateTime? @map("executed_at")
+  status            JobStatus @default(SCHEDULED)
+  createdBy         String   @map("created_by")
+  executedBy        String?  @map("executed_by")
+  backupId          String?  @map("backup_id")
+  errorDetails      String?  @map("error_details")
+  immutable         Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("data_retention_jobs")
+}
+
+model DataRetentionBackup {
+  id                String   @id @default(cuid())
+  jobId             String   @map("job_id")
+  entityType        String   @map("entity_type")
+  backupData        Json     @map("backup_data")
+  backupLocation    String   @map("backup_location")
+  encryptionKey     String   @map("encryption_key")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("data_retention_backups")
+}
+
+model AnonymizationLog {
+  id                String   @id @default(cuid())
+  requestId         String   @map("request_id")
+  entityType        String   @map("entity_type")
+  recordsProcessed  Int      @map("records_processed")
+  anonymizationMethod String @map("anonymization_method")
+  kAnonymityScore   Float?   @map("k_anonymity_score")
+  requestedBy       String   @map("requested_by")
+  purpose           String
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("anonymization_logs")
+}
+
+model AuditReport {
+  id                String   @id @default(cuid())
+  reportDate        DateTime @map("report_date")
+  reportType        String   @map("report_type")
+  summary           Json
+  totalLogs         Int      @map("total_logs")
+  totalAlerts       Int      @map("total_alerts")
+  anomaliesDetected Int      @map("anomalies_detected")
+  generatedBy       String   @map("generated_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("audit_reports")
+}
+
+// ==============================================
+// ADDITIONAL ENTITIES
+// ==============================================
+
+model StudentFamilyRelation {
+  id                String   @id @default(cuid())
+  studentId         String   @map("student_id")
+  familyUserId      String   @map("family_user_id")
+  relationshipType  RelationshipType @map("relationship_type")
+  isPrimaryContact  Boolean  @default(false) @map("is_primary_contact")
+  isEmergencyContact Boolean @default(false) @map("is_emergency_contact")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student  @relation(fields: [studentId], references: [id])
+
+  @@map("student_family_relations")
+}
+
+model ImportTemplate {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  templateType      TemplateType @map("template_type")
+  relatedTestId     String?  @map("related_test_id")
+  fields            Json
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("import_templates")
+}
+
+model ValueConfiguration {
+  id                String   @id @default(cuid())
+  testTitle         String   @map("test_title")
+  rules             Json
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("value_configurations")
+}
+
+model CompanyConfiguration {
+  id                String   @id @default(cuid())
+  companyName       String   @map("company_name")
+  cif               String   @unique
+  address           String
+  phone             String?
+  email             String?
+  logoUrl           String?  @map("logo_url")
+  postalCode        String   @map("postal_code")
+  city              String
+  province          String
+  country           String   @default("España")
+  website           String?
+  bankAccount       String?  @map("bank_account")
+  invoiceSeries     String   @map("invoice_series")
+  creditNoteSeries  String   @map("credit_note_series")
+  lastInvoiceNumber Int      @default(0) @map("last_invoice_number")
+  lastCreditNoteNumber Int   @default(0) @map("last_credit_note_number")
+  seriesYear        Int      @map("series_year")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("company_configurations")
+}
+
+model BackupConfiguration {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  backupType        BackupType @map("backup_type")
+  schedule          String
+  retentionDays     Int      @map("retention_days")
+  storageLocation   String   @map("storage_location")
+  encryptionEnabled Boolean  @default(true) @map("encryption_enabled")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("backup_configurations")
+}
+
+model BackupRecord {
+  id                String   @id @default(cuid())
+  configurationId   String   @map("configuration_id")
+  backupType        BackupType @map("backup_type")
+  backupDate        DateTime @map("backup_date")
+  backupSize        BigInt   @map("backup_size")
+  backupLocation    String   @map("backup_location")
+  status            BackupStatus @default(COMPLETED)
+  errorMessage      String?  @map("error_message")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("backup_records")
+}
+
+// ==============================================
+// ENUMS
+// ==============================================
+
+enum UserType {
+  ADMINISTRADOR
+  CLINICA
+  ORIENTADOR
+  EXAMINADOR
+  FAMILIA
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING_INVITATION
+  INVITATION_SENT
+  INACTIVE
+}
+
+enum Etapa {
+  EDUCACION_INFANTIL
+  EDUCACION_PRIMARIA
+  ESO
+  BACHILLERATO
+  FORMACION_PROFESIONAL
+}
+
+enum ConsentStatus {
+  SI
+  NO
+  PENDIENTE
+  NA
+}
+
+enum PaymentType {
+  B2B
+  B2B2C
+  NA
+}
+
+enum PaymentStatus {
+  PAGADO
+  PENDIENTE
+  NA
+}
+
+enum CenterType {
+  PUBLICO
+  CONCERTADO
+  PRIVADO
+}
+
+enum TestStatus {
+  SI
+  NO
+  PENDIENTE
+  NA
+}
+
+enum Priority {
+  BAJA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+enum ImportSource {
+  MANUAL
+  PDF_IMPORT
+  BULK_IMPORT
+  API
+}
+
+enum Interpretation {
+  MUY_BAJO
+  BAJO
+  MEDIO_BAJO
+  MEDIO
+  MEDIO_ALTO
+  ALTO
+  MUY_ALTO
+}
+
+enum EmotiTestType {
+  BATELLE_SCR
+  CIRCUITO_LOGOPEDIA
+  CIRCUITO_SENSORIOMOTOR
+  E2P
+}
+
+enum EmotiTestStatus {
+  COMPLETED
+  PARTIAL
+  ABANDONED
+}
+
+enum BatelleStatus {
+  PLANIFICADA
+  REALIZADA
+  NO_REALIZADA
+}
+
+enum CircuitoStatus {
+  PLANIFICADA
+  REALIZADA
+  NO_REALIZADA
+}
+
+enum E2PStatus {
+  PLANIFICADA
+  REALIZADA
+  NO_REALIZADA
+}
+
+enum RavensClassification {
+  MUY_BAJO
+  BAJO
+  MEDIO_BAJO
+  MEDIO
+  MEDIO_ALTO
+  ALTO
+  MUY_ALTO
+}
+
+enum EventType {
+  EVALUACION
+  REUNION
+  FORMACION
+  OTRO
+}
+
+enum ApprovalStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REQUEST_CANCELLATION
+  REQUEST_MODIFICATION
+  CANCELLED
+}
+
+enum DeviceType {
+  IPAD
+  TABLET
+  SMARTPHONE
+  LAPTOP
+}
+
+enum DeviceStatus {
+  ACTIVO
+  INACTIVO
+  MANTENIMIENTO
+}
+
+enum UsageStatus {
+  LIBRE
+  EN_USO
+  RESERVADO
+}
+
+enum ReservationStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
+}
+
+enum InventoryCategory {
+  INFORMATICA
+  MOBILIARIO
+  PROMOCIONAL
+  PRUEBAS
+}
+
+enum InventoryStatus {
+  LIBRE
+  OCUPADO
+  REPARACION
+}
+
+enum TestType {
+  LINK
+  FISICA
+}
+
+enum BillingType {
+  SUBSCRIPTION
+  ONE_TIME
+}
+
+enum BillingStatus {
+  PENDIENTE
+  PAGADO
+  FACTURADO
+}
+
+enum ClientType {
+  B2B
+  B2B2C
+}
+
+enum InvoiceStatus {
+  EMITIDA
+  ENVIADA
+  PAGADA
+  CANCELADA
+  ABONADA
+}
+
+enum PaymentMethod {
+  INTERNAL
+  STRIPE
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  DATA_ACCESS
+  DATA_EXPORT
+  DATA_MODIFICATION
+  DATA_DELETION
+  UNAUTHORIZED_ACCESS_ATTEMPT
+  SYSTEM_CONFIGURATION_CHANGE
+  USER_MANAGEMENT
+  SECURITY_EVENT
+}
+
+enum AnomalyType {
+  BULK_DATA_ACCESS
+  AFTER_HOURS_ACCESS
+  MULTIPLE_IP_ADDRESSES
+  UNUSUAL_EXPORT_PATTERN
+  FAILED_LOGIN_ATTEMPTS
+  PRIVILEGE_ESCALATION_ATTEMPT
+  DATA_ANOMALY
+  SYSTEM_ANOMALY
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  ACTIVE
+  INVESTIGATING
+  RESOLVED
+  FALSE_POSITIVE
+}
+
+enum PolicyStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum JobStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum RelationshipType {
+  PADRE
+  MADRE
+  TUTOR_LEGAL
+  ABUELO
+  ABUELA
+  TIO
+  TIA
+  OTRO
+}
+
+enum TemplateType {
+  PRUEBAS
+  RESULTADOS
+  USUARIOS
+  ALUMNOS
+  CENTROS
+  FACTURAS
+}
+
+enum BackupType {
+  FULL
+  INCREMENTAL
+  DIFFERENTIAL
+}
+
+enum BackupStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}

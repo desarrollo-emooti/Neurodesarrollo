@@ -1,0 +1,186 @@
+{
+  "name": "User",
+  "description": "Usuarios del sistema (no alumnos) - profesionales, orientadores, familias",
+  "fields": [
+    {
+      "name": "user_id",
+      "type": "string",
+      "description": "ID único visible del usuario (ej: USR_001)",
+      "required": true,
+      "unique": true
+    },
+    {
+      "name": "phone",
+      "type": "string",
+      "description": "Teléfono de contacto",
+      "required": false
+    },
+    {
+      "name": "dni",
+      "type": "string",
+      "description": "Documento de identidad (único)",
+      "required": false,
+      "unique": true
+    },
+    {
+      "name": "birth_date",
+      "type": "date",
+      "description": "Fecha de nacimiento",
+      "required": false
+    },
+    {
+      "name": "nationality",
+      "type": "string",
+      "description": "Nacionalidad",
+      "required": false
+    },
+    {
+      "name": "user_type",
+      "type": "enum",
+      "description": "Tipo de usuario del sistema",
+      "options": ["administrador", "clinica", "orientador", "examinador", "familia"],
+      "required": true
+    },
+    {
+      "name": "status",
+      "type": "enum",
+      "description": "Estado del usuario en el sistema",
+      "options": ["active", "pending_invitation", "invitation_sent", "inactive"],
+      "required": true,
+      "default": "pending_invitation"
+    },
+    {
+      "name": "address",
+      "type": "string",
+      "description": "Dirección completa",
+      "required": false
+    },
+    {
+      "name": "country",
+      "type": "string",
+      "description": "País",
+      "required": false,
+      "default": "España"
+    },
+    {
+      "name": "autonomous_community",
+      "type": "string",
+      "description": "Comunidad autónoma",
+      "required": false
+    },
+    {
+      "name": "province",
+      "type": "string",
+      "description": "Provincia",
+      "required": false
+    },
+    {
+      "name": "city",
+      "type": "string",
+      "description": "Ciudad",
+      "required": false
+    },
+    {
+      "name": "postal_code",
+      "type": "string",
+      "description": "Código postal",
+      "required": false
+    },
+    {
+      "name": "center_id",
+      "type": "string",
+      "description": "Centro principal (para orientador)",
+      "required": false
+    },
+    {
+      "name": "center_ids",
+      "type": "array",
+      "description": "Array de IDs de centros (para clínica/examinador)",
+      "required": false
+    },
+    {
+      "name": "specialty",
+      "type": "enum",
+      "description": "Especialidad profesional",
+      "options": ["Psicología", "Neuropsicología", "Logopedia", "Pedagogía", "Medicina", "Otro"],
+      "required": false
+    },
+    {
+      "name": "license_number",
+      "type": "string",
+      "description": "Número colegiado",
+      "required": false
+    },
+    {
+      "name": "allowed_etapas",
+      "type": "array",
+      "description": "Etapas educativas permitidas",
+      "required": false
+    },
+    {
+      "name": "allowed_courses",
+      "type": "array",
+      "description": "Cursos permitidos",
+      "required": false
+    },
+    {
+      "name": "allowed_groups",
+      "type": "array",
+      "description": "Grupos permitidos",
+      "required": false
+    },
+    {
+      "name": "payment_method",
+      "type": "enum",
+      "description": "Método de pago preferido",
+      "options": ["transferencia", "stripe", "efectivo"],
+      "required": false
+    },
+    {
+      "name": "bank_iban",
+      "type": "string",
+      "description": "IBAN para transferencias",
+      "required": false
+    },
+    {
+      "name": "bank_name",
+      "type": "string",
+      "description": "Nombre del banco",
+      "required": false
+    },
+    {
+      "name": "stripe_customer_id",
+      "type": "string",
+      "description": "ID de cliente en Stripe",
+      "required": false
+    },
+    {
+      "name": "active",
+      "type": "boolean",
+      "description": "Usuario activo en el sistema",
+      "required": true,
+      "default": true
+    }
+  ],
+  "indexes": [
+    {
+      "fields": ["user_type"],
+      "description": "Índice para filtrar por tipo de usuario"
+    },
+    {
+      "fields": ["status"],
+      "description": "Índice para filtrar por estado"
+    },
+    {
+      "fields": ["center_id"],
+      "description": "Índice para filtrar por centro principal"
+    }
+  ],
+  "permissions": {
+    "read": ["self", "administrador", "clinica", "orientador"],
+    "create": ["administrador"],
+    "update": ["self", "administrador"],
+    "delete": ["administrador"]
+  }
+}
+

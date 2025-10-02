@@ -1,0 +1,1281 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// ENUMS
+// ========================================
+
+enum UserType {
+  administrador
+  clinica
+  orientador
+  examinador
+  familia
+}
+
+enum UserStatus {
+  active
+  pending_invitation
+  invitation_sent
+  inactive
+}
+
+enum Etapa {
+  EDUCACION_INFANTIL
+  EDUCACION_PRIMARIA
+  ESO
+  BACHILLERATO
+  FORMACION_PROFESIONAL
+}
+
+enum ConsentStatus {
+  SI
+  NO
+  PENDIENTE
+  NA
+}
+
+enum PaymentType {
+  B2B
+  B2B2C
+  NA
+}
+
+enum PaymentStatus {
+  PAGADO
+  PENDIENTE
+  NA
+}
+
+enum CenterType {
+  publico
+  concertado
+  privado
+}
+
+enum Priority {
+  baja
+  media
+  alta
+  urgente
+}
+
+enum TestAssignmentStatus {
+  SI
+  NO
+  PENDIENTE
+  NA
+}
+
+enum ImportSource {
+  manual
+  pdf_import
+  bulk_import
+  api
+}
+
+enum Interpretation {
+  muy_bajo
+  bajo
+  medio_bajo
+  medio
+  medio_alto
+  alto
+  muy_alto
+}
+
+enum InventoryCategory {
+  INFORMATICA
+  MOBILIARIO
+  PROMOCIONAL
+  PRUEBAS
+}
+
+enum InventoryStatus {
+  LIBRE
+  OCUPADO
+  REPARACION
+}
+
+enum DeviceType {
+  ipad
+  tablet
+  smartphone
+  laptop
+}
+
+enum DeviceStatus {
+  activo
+  inactivo
+  mantenimiento
+}
+
+enum DeviceUsageStatus {
+  libre
+  en_uso
+  reservado
+}
+
+enum EventType {
+  evaluacion
+  reunion
+  formacion
+  otro
+}
+
+enum ApprovalStatus {
+  pendiente_aprobacion
+  aprobado
+  solicitud_cancelacion
+  solicitud_modificacion
+  cancelado
+}
+
+enum BillingType {
+  subscription
+  one_time
+}
+
+enum BillingStatus {
+  PENDIENTE
+  PAGADO
+  FACTURADO
+}
+
+enum InvoiceStatus {
+  EMITIDA
+  ENVIADA
+  PAGADA
+  CANCELADA
+  ABONADA
+}
+
+enum PaymentMethod {
+  internal
+  stripe
+}
+
+enum EmotiTestType {
+  Batelle_SCR
+  C_Logopedia
+  C_Sensorimotor
+  E2P
+}
+
+enum TestResultStatus {
+  Planificada
+  Realizada
+  No_realizada
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  DATA_ACCESS
+  DATA_MODIFICATION
+  DATA_DELETION
+  DATA_EXPORT
+  UNAUTHORIZED_ACCESS_ATTEMPT
+}
+
+enum AnomalyType {
+  BULK_DATA_ACCESS
+  AFTER_HOURS_ACCESS
+  MULTIPLE_IP_ADDRESSES
+  SUSPICIOUS_EXPORT
+  FAILED_LOGIN_ATTEMPTS
+  UNUSUAL_ACCESS_PATTERN
+}
+
+enum AnomalySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AnomalyStatus {
+  ACTIVE
+  INVESTIGATING
+  RESOLVED
+  FALSE_POSITIVE
+}
+
+enum RetentionStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum RetentionJobStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum TemplateType {
+  pruebas
+  resultados
+  usuarios
+}
+
+enum BackupType {
+  full
+  incremental
+  differential
+}
+
+enum AuthorizationMethod {
+  email
+  signaturit
+}
+
+enum AuthorizationStatus {
+  Pendiente
+  Enviado
+  Firmado
+  Rechazado
+  Caducado
+}
+
+enum ExportFormat {
+  CSV
+  Excel
+  PDF
+}
+
+enum ImportStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  ROLLED_BACK
+}
+
+enum ExportStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum ReportStatus {
+  borrador
+  revision_clinica
+  revision_orientador
+  aprobado
+  enviado
+}
+
+enum EmotiTestResultStatus {
+  completed
+  partial
+  abandoned
+}
+
+// ========================================
+// MODELS
+// ========================================
+
+model User {
+  id                    String      @id @default(uuid())
+  fullName              String
+  email                 String      @unique
+  phone                 String?
+  dni                   String?     @unique
+  birthDate             DateTime?
+  nationality           String?
+  userType              UserType
+  status                UserStatus  @default(active)
+  address               String?
+  country               String?
+  autonomousCommunity   String?
+  province              String?
+  city                  String?
+  postalCode            String?
+  centerId              String?
+  centerIds             String[]
+  specialty             String?
+  licenseNumber         String?
+  allowedEtapas         String[]
+  allowedCourses        String[]
+  allowedGroups         String[]
+  paymentMethod         String?
+  bankIban              String?
+  bankName              String?
+  stripeCustomerId      String?
+  active                Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  center                Center?     @relation("UserCenter", fields: [centerId], references: [id])
+  centers               Center[]    @relation("UserCenters")
+  students              Student[]   @relation("UserStudents")
+  testResults           TestResult[] @relation("UserTestResults")
+  agendaEvents          AgendaEvent[] @relation("UserAgendaEvents")
+  reports               Report[]    @relation("UserReports")
+  auditLogs             AuditLog[]
+  anomalyAlerts         AnomalyAlert[]
+  retentionPolicies     RetentionPolicy[]
+  retentionJobs         DataRetentionJob[]
+  importTemplates       ImportTemplate[]
+  exportTemplates       ExportTemplate[]
+  exportRecords         ExportRecord[]
+  importRecords         ImportRecord[]
+  authorizationRequests AuthorizationRequest[]
+  authorizationTemplates AuthorizationTemplate[]
+  tutorials             Tutorial[]
+  anonymizationLogs     AnonymizationLog[]
+
+  @@map("users")
+}
+
+model Student {
+  id                    String      @id @default(uuid())
+  studentId             String      @unique
+  nia                   String?     @unique
+  fullName              String
+  phone                 String?
+  dni                   String?
+  birthDate             DateTime?
+  gender                String?
+  nationality           String?
+  address               String?
+  country               String?
+  autonomousCommunity   String?
+  province              String?
+  city                  String?
+  postalCode            String?
+  etapa                 Etapa?
+  course                String?
+  classGroup            String?
+  centerId              String
+  orientadorUserId      String?
+  disabilityDegree      Int?
+  specialEducationalNeeds String?
+  medicalObservations   String?
+  generalObservations   String?
+  consentGiven          ConsentStatus @default(PENDIENTE)
+  paymentType           PaymentType @default(NA)
+  paymentStatus         PaymentStatus @default(NA)
+  active                Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  center                Center      @relation("StudentCenter", fields: [centerId], references: [id])
+  orientador            User?       @relation("UserStudents", fields: [orientadorUserId], references: [id])
+  testAssignments       TestAssignment[]
+  testResults           TestResult[]
+  stap2GoResults        Stap2GoResult[]
+  ravens2Results        Ravens2Result[]
+  emotiTestResults      EmotiTestResult[]
+  batelleSCRs           BatelleSCR[]
+  circuitoLogopedias    CircuitoLogopedia[]
+  circuitoSensoriomotors CircuitoSensoriomotor[]
+  e2Ps                  E2P[]
+  reports               Report[]
+  authorizationRequests AuthorizationRequest[]
+  familyRelations       StudentFamilyRelation[]
+
+  @@map("students")
+}
+
+model Center {
+  id                    String      @id @default(uuid())
+  name                  String
+  code                  String      @unique
+  phone                 String?
+  email                 String?
+  responsable           String?
+  type                  CenterType
+  totalStudents         Int?
+  address               String?
+  country               String?
+  autonomousCommunity   String?
+  province              String?
+  city                  String?
+  postalCode            String?
+  contractDocumentUrl   String?
+  additionalDocuments   Json?
+  observations          String?
+  active                Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  users                 User[]      @relation("UserCenter")
+  userCenters           User[]      @relation("UserCenters")
+  students              Student[]   @relation("StudentCenter")
+  devices               Device[]
+  agendaEvents          AgendaEvent[]
+  subscriptionConfigurations SubscriptionConfiguration[]
+
+  @@map("centers")
+}
+
+model TestAssignment {
+  id                    String      @id @default(uuid())
+  studentId             String
+  testTitle             String
+  testLink              String?
+  testDate              DateTime?
+  completionDate        DateTime?
+  assignedBy            String?
+  assignedDate          DateTime    @default(now())
+  testStatus            TestAssignmentStatus @default(PENDIENTE)
+  consentGiven          ConsentStatus @default(PENDIENTE)
+  priority              Priority    @default(media)
+  notes                 String?
+  active                Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  student               Student     @relation("TestAssignmentStudent", fields: [studentId], references: [id])
+  testResult            TestResult? @relation("TestAssignmentResult")
+
+  @@map("test_assignments")
+}
+
+model TestResult {
+  id                    String      @id @default(uuid())
+  resultId              String      @unique
+  assignmentId          String?     @unique
+  studentId             String
+  testName              String
+  testCode              String      @unique
+  academicYear          String
+  originalPdfUrl        String?
+  examinerId            String?
+  executionDate         DateTime?
+  rawScore              Int?
+  percentile            Int?
+  standardScore         Int?
+  interpretation        Interpretation?
+  detailedResults       Json?
+  observations          String?
+  incidents             String?
+  validated             Boolean     @default(false)
+  validatedBy           String?
+  validationDate        DateTime?
+  importSource          ImportSource @default(manual)
+  testVersion           String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  assignment            TestAssignment? @relation("TestAssignmentResult", fields: [assignmentId], references: [id])
+  student               Student     @relation("TestResultStudent", fields: [studentId], references: [id])
+  examiner              User?       @relation("UserTestResults", fields: [examinerId], references: [id])
+  stap2GoResult         Stap2GoResult?
+  ravens2Result         Ravens2Result?
+
+  @@map("test_results")
+}
+
+model Stap2GoResult {
+  id                    String      @id @default(uuid())
+  studentId             String
+  testResultId          String      @unique
+  codigoInforme         String?
+  fechaInforme          DateTime?
+  academicYear          String?
+  baremo                String?
+  rellenadoPor          String?
+  cuestionarioInatencionPd Int?
+  cuestionarioImpulsividadPd Int?
+  cuestionarioHiperactividadPd Int?
+  cuestionarioInatencionT Int?
+  cuestionarioImpulsividadT Int?
+  cuestionarioHiperactividadT Int?
+  cuestionarioInatencionNivel Int?
+  cuestionarioImpulsividadNivel Int?
+  cuestionarioHiperactividadNivel Int?
+  tareaInatencionPd     Int?
+  tareaInatencionT      Int?
+  tareaInatencionNivel  Int?
+  tareaImpulsividadPd   Int?
+  tareaImpulsividadT    Int?
+  tareaImpulsividadNivel Int?
+  tareaHiperactividadPd Int?
+  tareaHiperactividadT  Int?
+  tareaHiperactividadNivel Int?
+  processedDate         DateTime    @default(now())
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  student               Student     @relation("Stap2GoResultStudent", fields: [studentId], references: [id])
+  testResult            TestResult  @relation("Stap2GoResultTestResult", fields: [testResultId], references: [id])
+
+  @@map("stap2go_results")
+}
+
+model Ravens2Result {
+  id                    String      @id @default(uuid())
+  studentId             String
+  testResultId          String      @unique
+  examineeName          String?
+  academicYear          String?
+  puntuacionDirectaTotal Int?
+  puntuacionAptitud     Int?
+  puntuacionTipica      Int?
+  percentil             Int?
+  intervaloConfianza90  String?
+  estanino              Int?
+  clasificacionCualitativa String?
+  processedDate         DateTime    @default(now())
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  student               Student     @relation("Ravens2ResultStudent", fields: [studentId], references: [id])
+  testResult            TestResult  @relation("Ravens2ResultTestResult", fields: [testResultId], references: [id])
+
+  @@map("ravens2_results")
+}
+
+model InventoryItem {
+  id                    String      @id @default(uuid())
+  code                  String      @unique
+  name                  String
+  category              InventoryCategory
+  itemType              String?
+  inventoryNumber       String?
+  status                InventoryStatus @default(LIBRE)
+  location              String?
+  maintenanceLocation   String?
+  purchaseDate          DateTime?
+  serialNumber          String?
+  stockControlEnabled   Boolean     @default(false)
+  stock                 Int?
+  stockMinimo           Int?
+  supplier              String?
+  supplierWebsite       String?
+  supplierEmail         String?
+  supplierPhone         String?
+  testType              String?
+  requiresStaff         Boolean     @default(false)
+  requiresTablet        Boolean     @default(false)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  devices               Device[]
+
+  @@map("inventory_items")
+}
+
+model Device {
+  id                    String      @id @default(uuid())
+  name                  String
+  type                  DeviceType
+  serial                String      @unique
+  model                 String?
+  centerId              String?
+  location              String?
+  status                DeviceStatus @default(activo)
+  usageStatus           DeviceUsageStatus @default(libre)
+  lastStatusUpdate      DateTime?
+  inventoryItemId       String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  center                Center?     @relation("DeviceCenter", fields: [centerId], references: [id])
+  inventoryItem         InventoryItem? @relation("DeviceInventoryItem", fields: [inventoryItemId], references: [id])
+  deviceReservations    DeviceReservation[]
+
+  @@map("devices")
+}
+
+model DeviceReservation {
+  id                    String      @id @default(uuid())
+  deviceId              String
+  agendaEventId         String
+  startDate             DateTime
+  endDate               DateTime
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  device                Device      @relation("DeviceReservationDevice", fields: [deviceId], references: [id])
+  agendaEvent           AgendaEvent @relation("DeviceReservationAgendaEvent", fields: [agendaEventId], references: [id])
+
+  @@map("device_reservations")
+}
+
+model AgendaEvent {
+  id                    String      @id @default(uuid())
+  title                 String
+  description           String?
+  eventType             EventType
+  centerId              String
+  startDate             DateTime
+  endDate               DateTime
+  location              String?
+  assignedExaminerId    String?
+  estimatedStudents     Int?
+  testsToApply          Json?
+  approvalStatus        ApprovalStatus @default(pendiente_aprobacion)
+  approvedBy            String?
+  approvalDate          DateTime?
+  orientadorComments    String?
+  requestedChanges      String?
+  createdBy             String?
+  priority              Priority    @default(media)
+  recurring             Boolean     @default(false)
+  active                Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  center                Center      @relation("AgendaEventCenter", fields: [centerId], references: [id])
+  assignedExaminer      User?       @relation("UserAgendaEvents", fields: [assignedExaminerId], references: [id])
+  deviceReservations    DeviceReservation[]
+
+  @@map("agenda_events")
+}
+
+model SubscriptionConfiguration {
+  id                    String      @id @default(uuid())
+  name                  String
+  paymentType           PaymentType
+  centerId              String?
+  recipientName         String?
+  recipientEmail        String?
+  studentIds            String[]
+  pricePerStudent       Decimal
+  startDate             DateTime
+  nextBillingDate       DateTime?
+  isRecurring           Boolean     @default(false)
+  isActive              Boolean     @default(true)
+  createdBy             String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  center                Center?     @relation("SubscriptionConfigurationCenter", fields: [centerId], references: [id])
+  subscriptionBillings  SubscriptionBilling[]
+
+  @@map("subscription_configurations")
+}
+
+model SubscriptionBilling {
+  id                    String      @id @default(uuid())
+  subscriptionConfigId  String?
+  billingType           BillingType
+  billingPeriod         String?
+  billingDate           DateTime
+  recipientName         String?
+  recipientEmail        String?
+  studentDetails        Json?
+  numberOfStudents      Int
+  pricePerStudent       Decimal
+  totalAmount           Decimal
+  status                BillingStatus @default(PENDIENTE)
+  sentDate              DateTime?
+  paidDate              DateTime?
+  generatedAutomatically Boolean    @default(false)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  subscriptionConfiguration SubscriptionConfiguration? @relation("SubscriptionBillingConfiguration", fields: [subscriptionConfigId], references: [id])
+  invoices               Invoice[]
+
+  @@map("subscription_billings")
+}
+
+model Invoice {
+  id                    String      @id @default(uuid())
+  invoiceNumber         String      @unique
+  invoiceSeries         String?
+  invoiceYear           Int
+  invoiceDate           DateTime
+  billingIds            String[]
+  clientType            PaymentType
+  clientName            String?
+  clientCifDni          String?
+  clientAddress         String?
+  clientEmail           String?
+  concept               String?
+  subtotal              Decimal
+  vatRate               Decimal
+  vatAmount             Decimal
+  totalAmount           Decimal
+  paymentDetails        Json?
+  status                InvoiceStatus @default(EMITIDA)
+  pdfUrl                String?
+  isCreditNote          Boolean     @default(false)
+  originalInvoiceId     String?
+  rectifyingInvoiceId   String?
+  paymentMethod         PaymentMethod @default(internal)
+  stripeInvoiceId       String?
+  stripeCustomerId      String?
+  stripeHostedInvoiceUrl String?
+  stripeInvoicePdfUrl   String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  subscriptionBillings  SubscriptionBilling[] @relation("InvoiceSubscriptionBilling")
+
+  @@map("invoices")
+}
+
+model EmotiTest {
+  id                    String      @id @default(uuid())
+  testType              EmotiTestType
+  configuration         Json
+  htmlContent           String?
+  version               String
+  createdBy             String?
+  lastModified          DateTime    @default(now())
+  isActive              Boolean     @default(true)
+  description           String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  emotiTestResults      EmotiTestResult[]
+
+  @@map("emoti_tests")
+}
+
+model EmotiTestResult {
+  id                    String      @id @default(uuid())
+  studentId             String
+  testType              EmotiTestType
+  testDate              DateTime
+  ageAtTest             String?
+  academicYear          String?
+  rawResponses          Json
+  totalScore            Int
+  completionTimeSeconds Int?
+  status                EmotiTestResultStatus @default(completed)
+  ipAddress             String?
+  userAgent             String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  student               Student     @relation("EmotiTestResultStudent", fields: [studentId], references: [id])
+  emotiTest             EmotiTest   @relation("EmotiTestResultEmotiTest")
+
+  @@map("emoti_test_results")
+}
+
+model BatelleSCR {
+  id                    String      @id @default(uuid())
+  studentId             String
+  tipoPrueba            String
+  idPrueba              String
+  testDate              DateTime?
+  plannedDate           DateTime?
+  status                TestResultStatus @default(Planificada)
+  grupoEdad             String?
+  patientName           String?
+  centerName            String?
+  etapa                 String?
+  course                String?
+  classGroup            String?
+  resultadosPersonalSocial Json?
+  resultadosAdaptativo  Json?
+  resultadosMotor       Json?
+  resultadosComunicacion Json?
+  resultadosCognitivo   Json?
+  puntuacionTotal       Int?
+  examinerId            String?
+  observations          String?
+  academicYear          String?
+  rawResponses          Json?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  student               Student     @relation("BatelleSCRStudent", fields: [studentId], references: [id])
+
+  @@map("batelle_scrs")
+}
+
+model CircuitoLogopedia {
+  id                    String      @id @default(uuid())
+  studentId             String
+  tipoPrueba            String
+  idPrueba              String
+  testDate              DateTime?
+  plannedDate           DateTime?
+  status                TestResultStatus @default(Planificada)
+  grupoEdad             String?
+  patientName           String?
+  centerName            String?
+  etapa                 String?
+  course                String?
+  classGroup            String?
+  resultadosArticulacion Json?
+  resultadosFluencia    Json?
+  resultadosComprension Json?
+  resultadosExpresion   Json?
+  puntuacionTotal       Int?
+  examinerId            String?
+  observations          String?
+  academicYear          String?
+  rawResponses          Json?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  student               Student     @relation("CircuitoLogopediaStudent", fields: [studentId], references: [id])
+
+  @@map("circuito_logopedias")
+}
+
+model CircuitoSensoriomotor {
+  id                    String      @id @default(uuid())
+  studentId             String
+  tipoPrueba            String
+  idPrueba              String
+  testDate              DateTime?
+  plannedDate           DateTime?
+  status                TestResultStatus @default(Planificada)
+  grupoEdad             String?
+  patientName           String?
+  centerName            String?
+  etapa                 String?
+  course                String?
+  classGroup            String?
+  resultadosSensorial   Json?
+  resultadosMotor       Json?
+  resultadosCoordinacion Json?
+  resultadosEquilibrio  Json?
+  puntuacionTotal       Int?
+  examinerId            String?
+  observations          String?
+  academicYear          String?
+  rawResponses          Json?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  student               Student     @relation("CircuitoSensoriomotorStudent", fields: [studentId], references: [id])
+
+  @@map("circuito_sensoriomotors")
+}
+
+model E2P {
+  id                    String      @id @default(uuid())
+  studentId             String
+  tipoPrueba            String
+  idPrueba              String
+  testDate              DateTime?
+  plannedDate           DateTime?
+  status                TestResultStatus @default(Planificada)
+  grupoEdad             String?
+  patientName           String?
+  centerName            String?
+  etapa                 String?
+  course                String?
+  classGroup            String?
+  resultadosAtencion    Json?
+  resultadosMemoria     Json?
+  resultadosFuncionesEjecutivas Json?
+  resultadosVelocidadProcesamiento Json?
+  puntuacionTotal       Int?
+  examinerId            String?
+  observations          String?
+  academicYear          String?
+  rawResponses          Json?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  student               Student     @relation("E2PStudent", fields: [studentId], references: [id])
+
+  @@map("e2ps")
+}
+
+model AuditLog {
+  id                    String      @id @default(uuid())
+  userId                String?
+  action                AuditAction
+  resourceType          String?
+  resourceId            String?
+  details               Json?
+  ipAddress             String?
+  userAgent             String?
+  sessionId             String?
+  timestamp             DateTime    @default(now())
+  integrityHash         String
+  previousHash          String?
+  immutable             Boolean     @default(true)
+
+  // Relations
+  user                  User?       @relation("AuditLogUser", fields: [userId], references: [id])
+  anomalyAlerts         AnomalyAlert[]
+
+  @@map("audit_logs")
+}
+
+model AnomalyAlert {
+  id                    String      @id @default(uuid())
+  type                  AnomalyType
+  severity              AnomalySeverity
+  description           String
+  userId                String?
+  logId                 String?
+  metadata              Json?
+  detectedAt            DateTime    @default(now())
+  status                AnomalyStatus @default(ACTIVE)
+  resolvedBy            String?
+  resolvedAt            DateTime?
+  resolutionNotes       String?
+  immutable             Boolean     @default(true)
+
+  // Relations
+  user                  User?       @relation("AnomalyAlertUser", fields: [userId], references: [id])
+  auditLog              AuditLog?   @relation("AnomalyAlertAuditLog", fields: [logId], references: [id])
+
+  @@map("anomaly_alerts")
+}
+
+model PseudonymMapping {
+  id                    String      @id @default(uuid())
+  entityType            String
+  entityId              String
+  fieldName             String
+  pseudonym             String
+  originalValueHash     String
+  encryptionKeyVersion  String
+  createdBy             String?
+  accessedCount         Int         @default(0)
+  lastAccessed          DateTime?
+  immutable             Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@map("pseudonym_mappings")
+}
+
+model RetentionPolicy {
+  id                    String      @id @default(uuid())
+  entityType            String
+  retentionYears        Int
+  triggerField          String
+  description           String
+  legalBasis            String
+  autoApply             Boolean     @default(false)
+  gracePeriodDays       Int         @default(30)
+  notifyBeforeDays      Int         @default(7)
+  status                RetentionStatus @default(ACTIVE)
+  createdBy             String?
+  lastApplied           DateTime?
+  immutable             Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  user                  User?       @relation("RetentionPolicyUser", fields: [createdBy], references: [id])
+  retentionJobs         DataRetentionJob[]
+
+  @@map("retention_policies")
+}
+
+model DataRetentionJob {
+  id                    String      @id @default(uuid())
+  entityType            String
+  policyApplied         Json
+  recordsEligible       Int
+  recordsDeleted        Int
+  cutoffDate            DateTime
+  scheduledFor          DateTime
+  executedAt            DateTime?
+  status                RetentionJobStatus @default(SCHEDULED)
+  createdBy             String?
+  executedBy            String?
+  backupId              String?
+  errorDetails          String?
+  immutable             Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  user                  User?       @relation("RetentionJobUser", fields: [createdBy], references: [id])
+  retentionPolicy       RetentionPolicy? @relation("RetentionJobPolicy")
+
+  @@map("data_retention_jobs")
+}
+
+model ImportTemplate {
+  id                    String      @id @default(uuid())
+  name                  String
+  description           String
+  templateType          TemplateType
+  relatedTestId         String?
+  fields                Json
+  active                Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  user                  User?       @relation("ImportTemplateUser", fields: [relatedTestId], references: [id])
+
+  @@map("import_templates")
+}
+
+model ValueConfiguration {
+  id                    String      @id @default(uuid())
+  testTitle             String
+  rules                 Json
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@map("value_configurations")
+}
+
+model CompanyConfiguration {
+  id                    String      @id @default(uuid())
+  companyName           String
+  cif                   String?
+  address               String?
+  phone                 String?
+  email                 String?
+  logoUrl               String?
+  postalCode            String?
+  city                  String?
+  province              String?
+  country               String?
+  website               String?
+  bankAccount           String?
+  invoiceSeries         String?
+  creditNoteSeries      String?
+  lastInvoiceNumber     Int?
+  lastCreditNoteNumber  Int?
+  seriesYear            Int?
+  isActive              Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@map("company_configurations")
+}
+
+model BackupConfiguration {
+  id                    String      @id @default(uuid())
+  name                  String
+  description           String
+  backupType            BackupType
+  frequency             String
+  retentionDays         Int
+  storageLocation       String
+  isActive              Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  backupRecords         BackupRecord[]
+
+  @@map("backup_configurations")
+}
+
+model BackupRecord {
+  id                    String      @id @default(uuid())
+  backupConfigurationId String
+  backupType            BackupType
+  backupDate            DateTime
+  fileSize              BigInt
+  filePath              String
+  checksum              String
+  status                String
+  errorMessage          String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  backupConfiguration   BackupConfiguration @relation("BackupRecordConfiguration", fields: [backupConfigurationId], references: [id])
+
+  @@map("backup_records")
+}
+
+model AuthorizationRequest {
+  id                    String      @id @default(uuid())
+  studentId             String
+  authorizationType     String
+  method                AuthorizationMethod
+  status                AuthorizationStatus @default(Pendiente)
+  recipientEmail        String
+  recipientName         String
+  documentUrl           String?
+  signatureId           String?
+  sentAt                DateTime?
+  signedAt              DateTime?
+  expiresAt             DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  student               Student     @relation("AuthorizationRequestStudent", fields: [studentId], references: [id])
+
+  @@map("authorization_requests")
+}
+
+model AuthorizationTemplate {
+  id                    String      @id @default(uuid())
+  name                  String
+  description           String
+  templateType          String
+  subject               String
+  content               String
+  variables             Json
+  active                Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@map("authorization_templates")
+}
+
+model ExportTemplate {
+  id                    String      @id @default(uuid())
+  name                  String
+  description           String
+  entityType            String
+  fields                Json
+  filters               Json?
+  format                ExportFormat
+  isPredefined          Boolean     @default(false)
+  active                Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  user                  User?       @relation("ExportTemplateUser", fields: [name], references: [id])
+
+  @@map("export_templates")
+}
+
+model ExportRecord {
+  id                    String      @id @default(uuid())
+  templateId            String?
+  entityType            String
+  fields                Json
+  filters               Json?
+  format                ExportFormat
+  anonymize             Boolean     @default(false)
+  purpose               String?
+  requestedBy           String?
+  status                ExportStatus @default(IN_PROGRESS)
+  fileUrl               String?
+  recordsExported       Int?
+  createdAt             DateTime    @default(now())
+  completedAt           DateTime?
+
+  // Relations
+  user                  User?       @relation("ExportRecordUser", fields: [requestedBy], references: [id])
+
+  @@map("export_records")
+}
+
+model ImportRecord {
+  id                    String      @id @default(uuid())
+  templateId            String?
+  templateType          TemplateType
+  fileUrl               String
+  fileName              String
+  fileSize              Int
+  mapping               Json
+  validationRules       Json?
+  rollbackOnError       Boolean     @default(false)
+  requestedBy           String?
+  status                ImportStatus @default(IN_PROGRESS)
+  recordsProcessed      Int?
+  recordsImported       Int?
+  recordsFailed         Int?
+  errorDetails          String?
+  createdAt             DateTime    @default(now())
+  completedAt           DateTime?
+
+  // Relations
+  user                  User?       @relation("ImportRecordUser", fields: [requestedBy], references: [id])
+
+  @@map("import_records")
+}
+
+model Tutorial {
+  id                    String      @id @default(uuid())
+  title                 String
+  description           String
+  category              String
+  userTypes             UserType[]
+  content               String
+  videoUrl              String?
+  imageUrl              String?
+  tags                  String[]
+  active                Boolean     @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@map("tutorials")
+}
+
+model Report {
+  id                    String      @id @default(uuid())
+  studentId             String
+  title                 String
+  content               String
+  status                ReportStatus @default(borrador)
+  clinicalReviewerId    String?
+  orientadorReviewerId  String?
+  clinicalReviewDate    DateTime?
+  orientadorReviewDate  DateTime?
+  approvedDate          DateTime?
+  sentDate              DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  student               Student     @relation("ReportStudent", fields: [studentId], references: [id])
+  clinicalReviewer      User?       @relation("ReportClinicalReviewer", fields: [clinicalReviewerId], references: [id])
+  orientadorReviewer    User?       @relation("ReportOrientadorReviewer", fields: [orientadorReviewerId], references: [id])
+
+  @@map("reports")
+}
+
+model AnonymizationLog {
+  id                    String      @id @default(uuid())
+  requestId             String
+  entityType            String
+  recordsProcessed      Int
+  anonymizationMethod   String
+  kAnonymityScore       Decimal?
+  requestedBy           String?
+  purpose               String
+  createdAt             DateTime    @default(now())
+
+  // Relations
+  user                  User?       @relation("AnonymizationLogUser", fields: [requestedBy], references: [id])
+
+  @@map("anonymization_logs")
+}
+
+model StudentFamilyRelation {
+  id                    String      @id @default(uuid())
+  studentId             String
+  familyUserId          String
+  relationshipType      String
+  isPrimaryContact      Boolean     @default(false)
+  isEmergencyContact    Boolean     @default(false)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  // Relations
+  student               Student     @relation("StudentFamilyRelationStudent", fields: [studentId], references: [id])
+
+  @@map("student_family_relations")
+}

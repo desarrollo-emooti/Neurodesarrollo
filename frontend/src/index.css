@@ -1,0 +1,268 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom EMOOTI styles */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+}
+
+@layer components {
+  /* Card styles */
+  .emooti-card {
+    @apply bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  /* Button variants */
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-slate-100 text-slate-900 hover:bg-slate-200 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2;
+  }
+  
+  .btn-success {
+    @apply bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2;
+  }
+  
+  .btn-warning {
+    @apply bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2;
+  }
+  
+  .btn-error {
+    @apply bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+  }
+  
+  /* Input styles */
+  .emooti-input {
+    @apply border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg;
+  }
+  
+  /* Badge variants */
+  .badge-success {
+    @apply bg-green-100 text-green-800 border-green-200;
+  }
+  
+  .badge-warning {
+    @apply bg-orange-100 text-orange-800 border-orange-200;
+  }
+  
+  .badge-error {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+  
+  .badge-info {
+    @apply bg-blue-100 text-blue-800 border-blue-200;
+  }
+  
+  /* Table styles */
+  .emooti-table {
+    @apply w-full border-collapse;
+  }
+  
+  .emooti-table th {
+    @apply bg-slate-50 text-slate-700 font-medium text-left px-4 py-3 border-b border-slate-200;
+  }
+  
+  .emooti-table td {
+    @apply px-4 py-3 border-b border-slate-100;
+  }
+  
+  .emooti-table tbody tr:hover {
+    @apply bg-slate-50;
+  }
+  
+  /* Sidebar styles */
+  .sidebar-item {
+    @apply flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors;
+  }
+  
+  .sidebar-item-active {
+    @apply bg-blue-50 text-blue-700 border border-blue-200;
+  }
+  
+  .sidebar-item-inactive {
+    @apply text-slate-600 hover:text-slate-900 hover:bg-slate-50;
+  }
+  
+  /* Loading states */
+  .loading-skeleton {
+    @apply animate-pulse bg-slate-200 rounded;
+  }
+  
+  /* Form styles */
+  .form-group {
+    @apply space-y-2;
+  }
+  
+  .form-label {
+    @apply text-sm font-medium text-slate-700;
+  }
+  
+  .form-error {
+    @apply text-sm text-red-600;
+  }
+  
+  .form-help {
+    @apply text-sm text-slate-500;
+  }
+  
+  /* Modal styles */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;
+  }
+  
+  .modal-content {
+    @apply bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto;
+  }
+  
+  /* Toast styles */
+  .toast-success {
+    @apply bg-green-50 border-green-200 text-green-800;
+  }
+  
+  .toast-error {
+    @apply bg-red-50 border-red-200 text-red-800;
+  }
+  
+  .toast-warning {
+    @apply bg-orange-50 border-orange-200 text-orange-800;
+  }
+  
+  .toast-info {
+    @apply bg-blue-50 border-blue-200 text-blue-800;
+  }
+}
+
+@layer utilities {
+  /* Custom utilities */
+  .text-gradient {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+  
+  .bg-gradient-primary {
+    @apply bg-gradient-to-r from-blue-500 to-purple-600;
+  }
+  
+  .shadow-emooti {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .shadow-emooti-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Focus styles */
+.focus-visible {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-break {
+    page-break-before: always;
+  }
+}
+
+/* Dark mode support (for future implementation) */
+@media (prefers-color-scheme: dark) {
+  .dark-mode {
+    @apply bg-slate-900 text-slate-100;
+  }
+  
+  .dark-mode .emooti-card {
+    @apply bg-slate-800 border-slate-700;
+  }
+}
+

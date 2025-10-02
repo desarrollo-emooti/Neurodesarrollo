@@ -1,0 +1,82 @@
+{
+  "name": "Address",
+  "description": "Direcciones reutilizables para usuarios y centros",
+  "fields": [
+    {
+      "name": "address_line",
+      "type": "string",
+      "description": "Línea de dirección principal",
+      "required": true
+    },
+    {
+      "name": "country",
+      "type": "string",
+      "description": "País",
+      "required": true,
+      "default": "España"
+    },
+    {
+      "name": "autonomous_community",
+      "type": "string",
+      "description": "Comunidad autónoma",
+      "required": false
+    },
+    {
+      "name": "province",
+      "type": "string",
+      "description": "Provincia",
+      "required": false
+    },
+    {
+      "name": "city",
+      "type": "string",
+      "description": "Ciudad",
+      "required": true
+    },
+    {
+      "name": "postal_code",
+      "type": "string",
+      "description": "Código postal",
+      "required": true
+    },
+    {
+      "name": "latitude",
+      "type": "number",
+      "description": "Latitud para geolocalización",
+      "required": false
+    },
+    {
+      "name": "longitude",
+      "type": "number",
+      "description": "Longitud para geolocalización",
+      "required": false
+    },
+    {
+      "name": "formatted_address",
+      "type": "string",
+      "description": "Dirección formateada completa",
+      "required": false
+    }
+  ],
+  "indexes": [
+    {
+      "fields": ["city"],
+      "description": "Índice para filtrar por ciudad"
+    },
+    {
+      "fields": ["province"],
+      "description": "Índice para filtrar por provincia"
+    },
+    {
+      "fields": ["postal_code"],
+      "description": "Índice para filtrar por código postal"
+    }
+  ],
+  "permissions": {
+    "read": ["administrador", "clinica", "orientador", "examinador"],
+    "create": ["administrador", "clinica", "orientador"],
+    "update": ["administrador", "clinica", "orientador"],
+    "delete": ["administrador"]
+  }
+}
+
