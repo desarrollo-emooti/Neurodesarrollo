@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -33,7 +33,7 @@ router.get('/test/:studentId/:testType/:testId',
     param('testId').isString().withMessage('Test ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { studentId, testType, testId } = req.params;
 
     // Get student data
@@ -112,7 +112,7 @@ router.get('/test/:studentId/:testType/:testId',
       testId,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: testData,
       timestamp: new Date().toISOString(),
@@ -133,7 +133,7 @@ router.post('/test/submit',
     body('userAgent').optional().isString().withMessage('User agent must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       studentId,
       testType,
@@ -200,7 +200,7 @@ router.post('/test/submit',
         rawResponses,
         totalScore,
         completionTimeSeconds: completionTimeSeconds || 0,
-        status: 'completed',
+        status: 'COMPLETED',
         ipAddress: ipAddress || req.ip,
         userAgent: userAgent || req.headers['user-agent'],
       },
@@ -218,7 +218,7 @@ router.post('/test/submit',
             idPrueba: testId,
             testDate: new Date(),
             plannedDate: new Date(),
-            status: 'Realizada',
+            status: "REALIZADA",
             grupoEdad: ageSelected || 'unknown',
             patientName: student.fullName,
             centerName: student.center.name,
@@ -227,7 +227,6 @@ router.post('/test/submit',
             classGroup: 'unknown',
             puntuacionTotal: totalScore,
             academicYear: new Date().getFullYear().toString(),
-            rawResponses,
           },
         });
         break;
@@ -240,7 +239,7 @@ router.post('/test/submit',
             idPrueba: testId,
             testDate: new Date(),
             plannedDate: new Date(),
-            status: 'Realizada',
+            status: "REALIZADA",
             grupoEdad: ageSelected || 'unknown',
             patientName: student.fullName,
             centerName: student.center.name,
@@ -249,7 +248,6 @@ router.post('/test/submit',
             classGroup: 'unknown',
             puntuacionTotal: totalScore,
             academicYear: new Date().getFullYear().toString(),
-            rawResponses,
           },
         });
         break;
@@ -262,7 +260,7 @@ router.post('/test/submit',
             idPrueba: testId,
             testDate: new Date(),
             plannedDate: new Date(),
-            status: 'Realizada',
+            status: "REALIZADA",
             grupoEdad: ageSelected || 'unknown',
             patientName: student.fullName,
             centerName: student.center.name,
@@ -271,7 +269,6 @@ router.post('/test/submit',
             classGroup: 'unknown',
             puntuacionTotal: totalScore,
             academicYear: new Date().getFullYear().toString(),
-            rawResponses,
           },
         });
         break;
@@ -284,7 +281,7 @@ router.post('/test/submit',
             idPrueba: testId,
             testDate: new Date(),
             plannedDate: new Date(),
-            status: 'Realizada',
+            status: "REALIZADA",
             grupoEdad: ageSelected || 'unknown',
             patientName: student.fullName,
             centerName: student.center.name,
@@ -293,7 +290,6 @@ router.post('/test/submit',
             classGroup: 'unknown',
             puntuacionTotal: totalScore,
             academicYear: new Date().getFullYear().toString(),
-            rawResponses,
           },
         });
         break;
@@ -341,7 +337,7 @@ router.get('/test/confirmation/:resultId',
     param('resultId').isString().withMessage('Result ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { resultId } = req.params;
 
     const result = await prisma.emotiTestResult.findUnique({
@@ -379,7 +375,7 @@ router.get('/test/confirmation/:resultId',
       action: 'VIEW_TEST_CONFIRMATION',
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: result,
       timestamp: new Date().toISOString(),
@@ -389,8 +385,8 @@ router.get('/test/confirmation/:resultId',
 
 // Health check endpoint
 router.get('/health',
-  asyncHandler(async (req: any, res) => {
-    res.json({
+  asyncHandler(async (req: any, res: Response) => {
+    return res.json({
       success: true,
       message: 'EMOOTI Public API is running',
       timestamp: new Date().toISOString(),

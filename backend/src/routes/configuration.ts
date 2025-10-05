@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -32,7 +32,7 @@ const validateRequest = (req: any, res: any, next: any) => {
 // Get all configuration
 router.get('/',
   requireAdmin,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const [
       valueConfigurations,
       companyConfiguration,
@@ -62,11 +62,11 @@ router.get('/',
     };
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'Configuration', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'Configuration', undefined, {
       action: 'VIEW_ALL',
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: configuration,
       timestamp: new Date().toISOString(),
@@ -83,7 +83,7 @@ router.get('/value-configurations',
     query('testTitle').optional().isString().withMessage('Test title must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -121,12 +121,12 @@ router.get('/value-configurations',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'ValueConfiguration', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'ValueConfiguration', undefined, {
       filters: { testTitle },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: configurations,
       meta: {
@@ -152,7 +152,7 @@ router.post('/value-configurations',
     body('rules.*.color').isString().withMessage('Color is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { testTitle, rules } = req.body;
 
     // Check if configuration already exists for this test
@@ -219,7 +219,7 @@ router.put('/value-configurations/:id',
     body('rules.*.color').optional().isString().withMessage('Color is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
@@ -257,7 +257,7 @@ router.put('/value-configurations/:id',
       updatedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: configuration,
       timestamp: new Date().toISOString(),
@@ -272,7 +272,7 @@ router.delete('/value-configurations/:id',
     param('id').isString().withMessage('Configuration ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if configuration exists
@@ -303,7 +303,7 @@ router.delete('/value-configurations/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Value configuration deleted successfully',
       timestamp: new Date().toISOString(),
@@ -314,7 +314,7 @@ router.delete('/value-configurations/:id',
 // Get company configuration
 router.get('/company',
   requireAdmin,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const configuration = await prisma.companyConfiguration.findFirst({
       where: { isActive: true },
       select: {
@@ -343,11 +343,11 @@ router.get('/company',
     });
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'CompanyConfiguration', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'CompanyConfiguration', undefined, {
       action: 'VIEW',
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: configuration,
       timestamp: new Date().toISOString(),
@@ -378,7 +378,7 @@ router.put('/company',
     body('seriesYear').optional().isInt({ min: 2000, max: 2100 }).withMessage('Series year must be between 2000 and 2100'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const updateData = req.body;
 
     // Check if configuration exists
@@ -460,7 +460,7 @@ router.put('/company',
       updatedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: configuration,
       timestamp: new Date().toISOString(),
@@ -478,7 +478,7 @@ router.get('/import-templates',
     query('active').optional().isBoolean().withMessage('Active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -525,12 +525,12 @@ router.get('/import-templates',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'ImportTemplate', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'ImportTemplate', undefined, {
       filters: { templateType, active },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: templates,
       meta: {
@@ -562,7 +562,7 @@ router.post('/import-templates',
     body('active').optional().isBoolean().withMessage('Active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const templateData = req.body;
 
     // Create import template
@@ -590,7 +590,7 @@ router.post('/import-templates',
       templateData: {
         name: template.name,
         templateType: template.templateType,
-        fieldsCount: template.fields.length,
+        fieldsCount: Array.isArray(template.fields) ? template.fields.length : 0,
       },
     });
 
@@ -598,7 +598,7 @@ router.post('/import-templates',
       templateId: template.id,
       name: template.name,
       templateType: template.templateType,
-      fieldsCount: template.fields.length,
+      fieldsCount: Array.isArray(template.fields) ? template.fields.length : 0,
       createdBy: req.user.id,
     });
 
@@ -629,7 +629,7 @@ router.put('/import-templates/:id',
     body('active').optional().isBoolean().withMessage('Active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
@@ -672,7 +672,7 @@ router.put('/import-templates/:id',
       updatedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: template,
       timestamp: new Date().toISOString(),
@@ -687,7 +687,7 @@ router.delete('/import-templates/:id',
     param('id').isString().withMessage('Template ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if template exists
@@ -720,7 +720,7 @@ router.delete('/import-templates/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Import template deleted successfully',
       timestamp: new Date().toISOString(),
@@ -738,7 +738,7 @@ router.get('/backup-configurations',
     query('isActive').optional().isBoolean().withMessage('Is active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -774,7 +774,6 @@ router.get('/backup-configurations',
           name: true,
           description: true,
           backupType: true,
-          frequency: true,
           retentionDays: true,
           storageLocation: true,
           isActive: true,
@@ -786,12 +785,12 @@ router.get('/backup-configurations',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'BackupConfiguration', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'BackupConfiguration', undefined, {
       filters: { backupType, isActive },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: configurations,
       meta: {
@@ -812,13 +811,12 @@ router.post('/backup-configurations',
     body('name').isString().withMessage('Name is required'),
     body('description').isString().withMessage('Description is required'),
     body('backupType').isIn(['full', 'incremental', 'differential']).withMessage('Invalid backup type'),
-    body('frequency').isString().withMessage('Frequency is required'),
     body('retentionDays').isInt({ min: 1 }).withMessage('Retention days must be a positive integer'),
     body('storageLocation').isString().withMessage('Storage location is required'),
     body('isActive').optional().isBoolean().withMessage('Is active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const configurationData = req.body;
 
     // Create backup configuration
@@ -832,7 +830,6 @@ router.post('/backup-configurations',
         name: true,
         description: true,
         backupType: true,
-        frequency: true,
         retentionDays: true,
         storageLocation: true,
         isActive: true,
@@ -847,7 +844,6 @@ router.post('/backup-configurations',
       configurationData: {
         name: configuration.name,
         backupType: configuration.backupType,
-        frequency: configuration.frequency,
       },
     });
 
@@ -855,8 +851,6 @@ router.post('/backup-configurations',
       configId: configuration.id,
       name: configuration.name,
       backupType: configuration.backupType,
-      frequency: configuration.frequency,
-      createdBy: req.user.id,
     });
 
     res.status(201).json({
@@ -875,13 +869,12 @@ router.put('/backup-configurations/:id',
     body('name').optional().isString().withMessage('Name must be a string'),
     body('description').optional().isString().withMessage('Description must be a string'),
     body('backupType').optional().isIn(['full', 'incremental', 'differential']).withMessage('Invalid backup type'),
-    body('frequency').optional().isString().withMessage('Frequency must be a string'),
     body('retentionDays').optional().isInt({ min: 1 }).withMessage('Retention days must be a positive integer'),
     body('storageLocation').optional().isString().withMessage('Storage location must be a string'),
     body('isActive').optional().isBoolean().withMessage('Is active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
@@ -903,8 +896,6 @@ router.put('/backup-configurations/:id',
         name: true,
         description: true,
         backupType: true,
-        frequency: true,
-        retentionDays: true,
         storageLocation: true,
         isActive: true,
         createdAt: true,
@@ -925,7 +916,7 @@ router.put('/backup-configurations/:id',
       updatedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: configuration,
       timestamp: new Date().toISOString(),
@@ -940,7 +931,7 @@ router.delete('/backup-configurations/:id',
     param('id').isString().withMessage('Configuration ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if configuration exists
@@ -973,7 +964,7 @@ router.delete('/backup-configurations/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Backup configuration deleted successfully',
       timestamp: new Date().toISOString(),

@@ -2,13 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { AnomalyType, Severity, AlertStatus } from '@prisma/client';
+import { AuthUser } from './auth';
 
 interface AnomalyRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    userType: string;
-  };
+  user?: AuthUser;
 }
 
 // Store user activity in memory for anomaly detection

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -44,7 +44,7 @@ router.get('/',
     query('assignedExaminerId').optional().isString().withMessage('Assigned examiner ID must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -161,12 +161,12 @@ router.get('/',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'AgendaEvent', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'AgendaEvent', undefined, {
       filters: { search, centerId, eventType, approvalStatus, priority, startDate, endDate, assignedExaminerId },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: events,
       meta: {
@@ -186,7 +186,7 @@ router.get('/:id',
     param('id').isString().withMessage('Agenda event ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     const event = await prisma.agendaEvent.findUnique({
@@ -264,7 +264,7 @@ router.get('/:id',
     // Set audit data
     setAuditData(req, AuditAction.DATA_ACCESS, 'AgendaEvent', id);
 
-    res.json({
+    return res.json({
       success: true,
       data: event,
       timestamp: new Date().toISOString(),
@@ -291,7 +291,7 @@ router.post('/',
     body('recurring').optional().isBoolean().withMessage('Recurring must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const eventData = req.body;
 
     // Check if center exists
@@ -424,7 +424,7 @@ router.put('/:id',
     body('active').optional().isBoolean().withMessage('Active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
@@ -520,7 +520,7 @@ router.put('/:id',
       updatedFields: Object.keys(updateData),
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: event,
       timestamp: new Date().toISOString(),
@@ -537,7 +537,7 @@ router.post('/:id/approve',
     body('requestedChanges').optional().isString().withMessage('Requested changes must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const { action, comments, requestedChanges } = req.body;
 
@@ -639,7 +639,7 @@ router.post('/:id/approve',
       approvedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: event,
       timestamp: new Date().toISOString(),
@@ -654,7 +654,7 @@ router.delete('/:id',
     param('id').isString().withMessage('Agenda event ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if event exists
@@ -690,7 +690,7 @@ router.delete('/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Agenda event deleted successfully' },
       timestamp: new Date().toISOString(),
@@ -706,7 +706,7 @@ router.get('/calendar/events',
     query('centerId').optional().isString().withMessage('Center ID must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { startDate, endDate, centerId } = req.query;
 
     // Build where clause based on user permissions
@@ -766,12 +766,12 @@ router.get('/calendar/events',
     });
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'AgendaEvent', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'AgendaEvent', undefined, {
       action: 'CALENDAR_VIEW',
       filters: { startDate, endDate, centerId },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: events,
       timestamp: new Date().toISOString(),

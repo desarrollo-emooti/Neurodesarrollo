@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -41,7 +41,7 @@ router.get('/',
     query('active').optional().isBoolean().withMessage('Active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -133,12 +133,12 @@ router.get('/',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'Center', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'Center', undefined, {
       filters: { search, type, province, autonomousCommunity, active },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: centers,
       meta: {
@@ -158,7 +158,7 @@ router.get('/:id',
     param('id').isString().withMessage('Center ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     const center = await prisma.center.findUnique({
@@ -259,7 +259,7 @@ router.get('/:id',
     // Set audit data
     setAuditData(req, AuditAction.DATA_ACCESS, 'Center', id);
 
-    res.json({
+    return res.json({
       success: true,
       data: center,
       timestamp: new Date().toISOString(),
@@ -289,7 +289,7 @@ router.post('/',
     body('observations').optional().isString().withMessage('Observations must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const centerData = req.body;
 
     // Check if code already exists
@@ -383,9 +383,9 @@ router.put('/:id',
     body('active').optional().isBoolean().withMessage('Active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
-    const updateData = req.body;
+    let updateData = req.body;
 
     // Check if center exists
     const existingCenter = await prisma.center.findUnique({
@@ -494,7 +494,7 @@ router.put('/:id',
       updatedFields: Object.keys(updateData),
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: center,
       timestamp: new Date().toISOString(),
@@ -509,7 +509,7 @@ router.delete('/:id',
     param('id').isString().withMessage('Center ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if center exists
@@ -557,7 +557,7 @@ router.delete('/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Center deleted successfully' },
       timestamp: new Date().toISOString(),
@@ -571,7 +571,7 @@ router.get('/:id/statistics',
     param('id').isString().withMessage('Center ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if center exists
@@ -690,7 +690,7 @@ router.get('/:id/statistics',
       action: 'STATISTICS',
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: statistics,
       timestamp: new Date().toISOString(),

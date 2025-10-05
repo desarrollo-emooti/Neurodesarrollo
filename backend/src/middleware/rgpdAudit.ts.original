@@ -23,24 +23,19 @@ declare global {
 export const rgpdAudit = (action: AuditAction, entityType: string) => {
   return (req: Request, res: Response, next: NextFunction) => {
     // Store audit information in request
-    const auditData: any = {
+    req.rgpdAudit = {
       action,
       entityType,
+      entityId: req.params.id || undefined,
       details: {
         method: req.method,
         url: req.url,
         body: req.method !== 'GET' ? req.body : undefined,
         query: req.query,
         userAgent: req.get('User-Agent'),
-        ipAddress: req.ip || req.connection.remoteAddress || undefined,
+        ipAddress: req.ip || req.connection.remoteAddress,
       },
     };
-
-    if (req.params.id) {
-      auditData.entityId = req.params.id;
-    }
-
-    req.rgpdAudit = auditData;
 
     next();
   };
@@ -59,13 +54,13 @@ export const logRGPDAudit = async (req: Request, res: Response, next: NextFuncti
             req.user!.id,
             req.rgpdAudit!.action,
             req.rgpdAudit!.entityType,
-            req.rgpdAudit!.entityId || null,
+            req.rgpdAudit!.entityId || undefined,
             {
               ...req.rgpdAudit!.details,
               responseStatus: res.statusCode,
               responseTime: Date.now() - (req as any).startTime,
             },
-            req.ip || req.connection.remoteAddress || undefined,
+            req.ip || req.connection.remoteAddress,
             req.get('User-Agent')
           );
         } catch (error) {

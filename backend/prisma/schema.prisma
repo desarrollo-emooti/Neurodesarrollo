@@ -53,7 +53,7 @@ model User {
   agendaEvents      AgendaEvent[] @relation("AgendaEventExaminer")
   auditLogs         AuditLog[]
   anomalyAlerts     AnomalyAlert[]
-  createdUsers      User[] @relation("UserCreatedBy", fields: [createdBy], references: [id])
+  createdUsers      User[] @relation("UserCreatedBy")
   createdByUser     User? @relation("UserCreatedBy", fields: [createdBy], references: [id])
 
   @@map("users")
@@ -79,7 +79,7 @@ model Student {
   specialEducationalNeeds String? @map("special_educational_needs")
   medicalObservations   String?  @map("medical_observations")
   generalObservations   String?  @map("general_observations")
-  consentGiven          ConsentStatus @map("consent_given") @default(PENDING)
+  consentGiven          ConsentStatus @map("consent_given") @default(PENDIENTE)
   paymentType           PaymentType @map("payment_type") @default(NA)
   paymentStatus         PaymentStatus @map("payment_status") @default(NA)
   active                Boolean  @default(true)
@@ -168,9 +168,9 @@ model TestAssignment {
   completionDate    DateTime? @map("completion_date")
   assignedBy        String   @map("assigned_by")
   assignedDate      DateTime @default(now()) @map("assigned_date")
-  testStatus        TestStatus @map("test_status") @default(PENDING)
-  consentGiven      ConsentStatus @map("consent_given") @default(PENDING)
-  priority          Priority @default(MEDIUM)
+  testStatus        TestStatus @map("test_status") @default(PENDIENTE)
+  consentGiven      ConsentStatus @map("consent_given") @default(PENDIENTE)
+  priority          Priority @default(MEDIA)
   notes             String?
   active            Boolean  @default(true)
   createdAt         DateTime @default(now()) @map("created_at")
@@ -236,9 +236,6 @@ model EmotiTest {
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
-  // Relations
-  emotiTestResults  EmotiTestResult[]
-
   @@map("emoti_tests")
 }
 
@@ -271,7 +268,7 @@ model BatelleSCR {
   idPrueba          String   @map("id_prueba")
   testDate          DateTime @map("test_date")
   plannedDate       DateTime? @map("planned_date")
-  status            BatelleStatus @default(PLANNED)
+  status            BatelleStatus @default(PLANIFICADA)
   grupoEdad         String   @map("grupo_edad")
   patientName       String   @map("patient_name")
   centerName        String   @map("center_name")
@@ -303,7 +300,7 @@ model CircuitoLogopedia {
   idPrueba          String   @map("id_prueba")
   testDate          DateTime @map("test_date")
   plannedDate       DateTime? @map("planned_date")
-  status            CircuitoStatus @default(PLANNED)
+  status            CircuitoStatus @default(PLANIFICADA)
   grupoEdad         String   @map("grupo_edad")
   patientName       String   @map("patient_name")
   centerName        String   @map("center_name")
@@ -334,7 +331,7 @@ model CircuitoSensoriomotor {
   idPrueba          String   @map("id_prueba")
   testDate          DateTime @map("test_date")
   plannedDate       DateTime? @map("planned_date")
-  status            CircuitoStatus @default(PLANNED)
+  status            CircuitoStatus @default(PLANIFICADA)
   grupoEdad         String   @map("grupo_edad")
   patientName       String   @map("patient_name")
   centerName        String   @map("center_name")
@@ -365,7 +362,7 @@ model E2P {
   idPrueba          String   @map("id_prueba")
   testDate          DateTime @map("test_date")
   plannedDate       DateTime? @map("planned_date")
-  status            E2PStatus @default(PLANNED)
+  status            E2PStatus @default(PLANIFICADA)
   grupoEdad         String   @map("grupo_edad")
   patientName       String   @map("patient_name")
   centerName        String   @map("center_name")
@@ -465,7 +462,7 @@ model AgendaEvent {
   orientadorComments    String?  @map("orientador_comments")
   requestedChanges      String?  @map("requested_changes")
   createdBy             String   @map("created_by")
-  priority              Priority @default(MEDIUM)
+  priority              Priority @default(MEDIA)
   recurring             Boolean  @default(false)
   active                Boolean  @default(true)
   createdAt             DateTime @default(now()) @map("created_at")
@@ -486,8 +483,8 @@ model Device {
   model             String?
   centerId          String   @map("center_id")
   location          String?
-  status            DeviceStatus @default(ACTIVE)
-  usageStatus       UsageStatus @map("usage_status") @default(FREE)
+  status            DeviceStatus @default(ACTIVO)
+  usageStatus       UsageStatus @map("usage_status") @default(LIBRE)
   lastStatusUpdate  DateTime @default(now()) @map("last_status_update")
   inventoryItemId   String?  @map("inventory_item_id")
   createdAt         DateTime @default(now()) @map("created_at")
@@ -525,7 +522,7 @@ model InventoryItem {
   category              InventoryCategory
   itemType              String?  @map("item_type")
   inventoryNumber       String?  @map("inventory_number")
-  status                InventoryStatus @default(FREE)
+  status                InventoryStatus @default(LIBRE)
   location              String?
   maintenanceLocation   String?  @map("maintenance_location")
   purchaseDate          DateTime? @map("purchase_date") @db.Date
@@ -590,7 +587,7 @@ model SubscriptionBilling {
   numberOfStudents  Int      @map("number_of_students")
   pricePerStudent   Float    @map("price_per_student")
   totalAmount       Float    @map("total_amount")
-  status            BillingStatus @default(PENDING)
+  status            BillingStatus @default(PENDIENTE)
   sentDate          DateTime? @map("sent_date")
   paidDate          DateTime? @map("paid_date")
   generatedAutomatically Boolean @default(false) @map("generated_automatically")
@@ -599,7 +596,7 @@ model SubscriptionBilling {
 
   // Relations
   subscriptionConfig SubscriptionConfiguration? @relation(fields: [subscriptionConfigId], references: [id])
-  invoices          Invoice[]
+  invoices          Invoice[] @relation("InvoiceBillings")
 
   @@map("subscription_billings")
 }
@@ -622,7 +619,7 @@ model Invoice {
   vatAmount         Float    @map("vat_amount")
   totalAmount       Float    @map("total_amount")
   paymentDetails    Json     @map("payment_details")
-  status            InvoiceStatus @default(ISSUED)
+  status            InvoiceStatus @default(EMITIDA)
   pdfUrl            String?  @map("pdf_url")
   isCreditNote      Boolean  @default(false) @map("is_credit_note")
   originalInvoiceId String?  @map("original_invoice_id")

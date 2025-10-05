@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -41,7 +41,7 @@ router.get('/',
     query('usageStatus').optional().isIn(['LIBRE', 'EN_USO', 'RESERVADO']).withMessage('Invalid usage status'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -142,12 +142,12 @@ router.get('/',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'Device', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'Device', undefined, {
       filters: { search, centerId, type, status, usageStatus },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: devices,
       meta: {
@@ -167,7 +167,7 @@ router.get('/:id',
     param('id').isString().withMessage('Device ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     const device = await prisma.device.findUnique({
@@ -247,7 +247,7 @@ router.get('/:id',
     // Set audit data
     setAuditData(req, AuditAction.DATA_ACCESS, 'Device', id);
 
-    res.json({
+    return res.json({
       success: true,
       data: device,
       timestamp: new Date().toISOString(),
@@ -270,7 +270,7 @@ router.post('/',
     body('inventoryItemId').optional().isString().withMessage('Inventory item ID must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const deviceData = req.body;
 
     // Check if center exists
@@ -386,7 +386,7 @@ router.put('/:id',
     body('inventoryItemId').optional().isString().withMessage('Inventory item ID must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
@@ -498,7 +498,7 @@ router.put('/:id',
       updatedFields: Object.keys(updateData),
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: device,
       timestamp: new Date().toISOString(),
@@ -513,7 +513,7 @@ router.delete('/:id',
     param('id').isString().withMessage('Device ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if device exists
@@ -564,7 +564,7 @@ router.delete('/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Device deleted successfully' },
       timestamp: new Date().toISOString(),
@@ -580,7 +580,7 @@ router.get('/:id/reservations',
     query('endDate').optional().isISO8601().withMessage('End date must be a valid date'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const { startDate, endDate } = req.query;
 
@@ -647,13 +647,13 @@ router.get('/:id/reservations',
     });
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'DeviceReservation', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'DeviceReservation', undefined, {
       action: 'LIST_RESERVATIONS',
       deviceId: id,
       filters: { startDate, endDate },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: reservations,
       timestamp: new Date().toISOString(),
@@ -671,7 +671,7 @@ router.post('/:id/reservations',
     body('agendaEventId').optional().isString().withMessage('Agenda event ID must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const { startDate, endDate, agendaEventId } = req.body;
 
@@ -788,7 +788,7 @@ router.post('/:id/reservations',
       reservedBy: req.user.id,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: reservation,
       timestamp: new Date().toISOString(),

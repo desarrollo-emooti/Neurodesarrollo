@@ -3,13 +3,10 @@ import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { AuditAction } from '@prisma/client';
 import crypto from 'crypto';
+import { AuthUser } from './auth';
 
 interface AuditRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    userType: string;
-  };
+  user?: AuthUser;
   auditData?: {
     action: AuditAction;
     resourceType?: string;
@@ -28,7 +25,7 @@ export const auditLogger = async (req: AuditRequest, res: Response, next: NextFu
     // Log the audit after response is sent
     setImmediate(async () => {
       try {
-        await logAuditEvent(req, res, startTime, body);
+        await logAuditEventInternal(req, res, startTime, body);
       } catch (error) {
         logger.error('Failed to log audit event:', error);
       }
@@ -40,7 +37,7 @@ export const auditLogger = async (req: AuditRequest, res: Response, next: NextFu
   next();
 };
 
-async function logAuditEvent(
+async function logAuditEventInternal(
   req: AuditRequest,
   res: Response,
   startTime: number,
@@ -95,19 +92,23 @@ async function logAuditEvent(
       .digest('hex');
 
     // Create audit log
+    const logData: any = {
+      action,
+      details,
+      integrityHash,
+      previousHash: previousHash || '',
+    };
+
+    if (userId) logData.userId = userId;
+    if (resourceType) logData.resourceType = resourceType;
+    if (resourceId) logData.resourceId = resourceId;
+    if (req.ip) logData.ipAddress = req.ip;
+    else if ((req as any).connection?.remoteAddress) logData.ipAddress = (req as any).connection.remoteAddress;
+    if (req.get('User-Agent')) logData.userAgent = req.get('User-Agent');
+    if ((req as any).sessionID) logData.sessionId = (req as any).sessionID;
+
     await prisma.auditLog.create({
-      data: {
-        userId,
-        action,
-        resourceType,
-        resourceId,
-        details,
-        ipAddress: req.ip || req.connection.remoteAddress,
-        userAgent: req.get('User-Agent'),
-        sessionId: req.sessionID,
-        integrityHash,
-        previousHash,
-      },
+      data: logData,
     });
 
     logger.debug('Audit log created:', {
@@ -180,10 +181,17 @@ function determineResourceType(req: AuditRequest): string | null {
   // Extract resource type from URL
   const urlParts = req.originalUrl.split('/');
   const apiIndex = urlParts.findIndex(part => part === 'api');
-  
+
   if (apiIndex !== -1 && urlParts[apiIndex + 2]) {
     const resourceType = urlParts[apiIndex + 2];
-    return resourceType.replace(/s$/, ''); // Remove plural 's'
+    if (!resourceType) return null;
+
+    // Remove query params
+    const cleanResourceType = resourceType.split('?')[0];
+    if (!cleanResourceType) return null;
+
+    // Remove plural 's'
+    return cleanResourceType.replace(/s$/, '');
   }
 
   return null;
@@ -220,12 +228,18 @@ export const setAuditData = (
   resourceId?: string,
   details?: any
 ) => {
-  req.auditData = {
-    action,
-    resourceType,
-    resourceId,
-    details,
-  };
+  const auditData: {
+    action: AuditAction;
+    resourceType?: string;
+    resourceId?: string;
+    details?: any;
+  } = { action };
+
+  if (resourceType) auditData.resourceType = resourceType;
+  if (resourceId) auditData.resourceId = resourceId;
+  if (details) auditData.details = details;
+
+  req.auditData = auditData;
 };
 
 // Middleware to log specific audit events
@@ -265,19 +279,22 @@ export const logAuditEvent = async (
       .digest('hex');
 
     // Create audit log
+    const logData: any = {
+      action,
+      details,
+      integrityHash,
+      previousHash: previousHash || '',
+    };
+
+    if (userId) logData.userId = userId;
+    if (resourceType) logData.resourceType = resourceType;
+    if (resourceId) logData.resourceId = resourceId;
+    if (ipAddress) logData.ipAddress = ipAddress;
+    if (userAgent) logData.userAgent = userAgent;
+    if (sessionId) logData.sessionId = sessionId;
+
     await prisma.auditLog.create({
-      data: {
-        userId,
-        action,
-        resourceType,
-        resourceId,
-        details,
-        ipAddress,
-        userAgent,
-        sessionId,
-        integrityHash,
-        previousHash,
-      },
+      data: logData,
     });
 
     logger.debug('Manual audit log created:', {

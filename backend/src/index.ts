@@ -6,6 +6,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import passport from './config/passport';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -47,8 +48,8 @@ dotenv.config();
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
-const API_VERSION = process.env.API_VERSION || 'v1';
+const PORT = process.env['PORT'] || 3000;
+const API_VERSION = process.env['API_VERSION'] || 'v1';
 
 // Initialize Prisma Client
 export const prisma = new PrismaClient({
@@ -101,6 +102,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Compression middleware
 app.use(compression());
+
+// Initialize Passport
+app.use(passport.initialize());
 
 // Logging middleware
 app.use(morgan('combined', {

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -41,7 +41,7 @@ router.get('/',
     query('centerId').optional().isString().withMessage('Center ID must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -117,12 +117,12 @@ router.get('/',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'User', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'User', undefined, {
       filters: { search, userType, status, centerId },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: users,
       meta: {
@@ -142,7 +142,7 @@ router.get('/:id',
     param('id').isString().withMessage('User ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if user can access this user's data
@@ -206,7 +206,7 @@ router.get('/:id',
     // Set audit data
     setAuditData(req, AuditAction.DATA_ACCESS, 'User', id);
 
-    res.json({
+    return res.json({
       success: true,
       data: user,
       timestamp: new Date().toISOString(),
@@ -240,7 +240,7 @@ router.post('/',
     body('allowedGroups').optional().isArray().withMessage('Allowed groups must be an array'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const userData = req.body;
 
     // Check if email already exists
@@ -345,9 +345,9 @@ router.put('/:id',
     body('active').optional().isBoolean().withMessage('Active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
-    const updateData = req.body;
+    let updateData = req.body;
 
     // Check if user can update this user
     if (req.user.userType !== 'ADMINISTRADOR' && req.user.id !== id) {
@@ -434,7 +434,7 @@ router.put('/:id',
       updatedFields: Object.keys(updateData),
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: user,
       timestamp: new Date().toISOString(),
@@ -449,7 +449,7 @@ router.delete('/:id',
     param('id').isString().withMessage('User ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if user exists
@@ -484,7 +484,7 @@ router.delete('/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'User deleted successfully' },
       timestamp: new Date().toISOString(),
@@ -501,7 +501,7 @@ router.post('/bulk',
     body('data').optional().isObject().withMessage('Data must be an object'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { action, userIds, data } = req.body;
 
     switch (action) {
@@ -516,14 +516,14 @@ router.post('/bulk',
         });
 
         // Set audit data
-        setAuditData(req, AuditAction.USER_MANAGEMENT, 'User', null, {
+        setAuditData(req, AuditAction.USER_MANAGEMENT, 'User', undefined, {
           action: 'BULK_UPDATE',
           userIds,
           updatedFields: Object.keys(data),
           affectedCount: updatedUsers.count,
         });
 
-        res.json({
+        return res.json({
           success: true,
           data: {
             message: `${updatedUsers.count} users updated successfully`,
@@ -531,7 +531,6 @@ router.post('/bulk',
           },
           timestamp: new Date().toISOString(),
         });
-        break;
 
       case 'delete':
         const deletedUsers = await prisma.user.updateMany({
@@ -540,13 +539,13 @@ router.post('/bulk',
         });
 
         // Set audit data
-        setAuditData(req, AuditAction.USER_MANAGEMENT, 'User', null, {
+        setAuditData(req, AuditAction.USER_MANAGEMENT, 'User', undefined, {
           action: 'BULK_DELETE',
           userIds,
           affectedCount: deletedUsers.count,
         });
 
-        res.json({
+        return res.json({
           success: true,
           data: {
             message: `${deletedUsers.count} users deleted successfully`,
@@ -554,7 +553,6 @@ router.post('/bulk',
           },
           timestamp: new Date().toISOString(),
         });
-        break;
 
       case 'export':
         const users = await prisma.user.findMany({
@@ -577,18 +575,17 @@ router.post('/bulk',
         });
 
         // Set audit data
-        setAuditData(req, AuditAction.DATA_EXPORT, 'User', null, {
+        setAuditData(req, AuditAction.DATA_EXPORT, 'User', undefined, {
           action: 'BULK_EXPORT',
           userIds,
           exportedCount: users.length,
         });
 
-        res.json({
+        return res.json({
           success: true,
           data: users,
           timestamp: new Date().toISOString(),
         });
-        break;
 
       default:
         throw validationErrorHandler('Invalid bulk action');

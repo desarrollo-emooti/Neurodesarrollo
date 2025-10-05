@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -46,7 +46,7 @@ router.get('/',
     query('importSource').optional().isIn(['MANUAL', 'PDF_IMPORT', 'BULK_IMPORT', 'API']).withMessage('Invalid import source'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -199,12 +199,12 @@ router.get('/',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'TestResult', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'TestResult', undefined, {
       filters: { search, studentId, centerId, etapa, course, classGroup, testName, academicYear, validated, importSource },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: results,
       meta: {
@@ -224,7 +224,7 @@ router.get('/:id',
     param('id').isString().withMessage('Test result ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     const result = await prisma.testResult.findUnique({
@@ -341,7 +341,7 @@ router.get('/:id',
     // Set audit data
     setAuditData(req, AuditAction.DATA_ACCESS, 'TestResult', id);
 
-    res.json({
+    return res.json({
       success: true,
       data: result,
       timestamp: new Date().toISOString(),
@@ -371,7 +371,7 @@ router.post('/',
     body('testVersion').optional().isString().withMessage('Test version must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const resultData = req.body;
 
     // Check if student exists
@@ -516,7 +516,7 @@ router.put('/:id',
     body('testVersion').optional().isString().withMessage('Test version must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
@@ -624,7 +624,7 @@ router.put('/:id',
       updatedFields: Object.keys(updateData),
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: result,
       timestamp: new Date().toISOString(),
@@ -641,7 +641,7 @@ router.post('/:id/validate',
     body('observations').optional().isString().withMessage('Observations must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const { validated, observations } = req.body;
 
@@ -721,7 +721,7 @@ router.post('/:id/validate',
       validatedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: result,
       timestamp: new Date().toISOString(),
@@ -736,7 +736,7 @@ router.delete('/:id',
     param('id').isString().withMessage('Test result ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if result exists
@@ -778,7 +778,7 @@ router.delete('/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Test result deleted successfully' },
       timestamp: new Date().toISOString(),
@@ -794,7 +794,7 @@ router.get('/student/:studentId/history',
     query('academicYear').optional().isString().withMessage('Academic year must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { studentId } = req.params;
     const { testName, academicYear } = req.query;
 
@@ -897,18 +897,18 @@ router.get('/student/:studentId/history',
       if (!acc[result.testName]) {
         acc[result.testName] = [];
       }
-      acc[result.testName].push(result);
+      acc[result.testName]!.push(result);
       return acc;
     }, {} as Record<string, any[]>);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'TestResult', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'TestResult', undefined, {
       action: 'STUDENT_HISTORY',
       studentId,
       filters: { testName, academicYear },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         student: {

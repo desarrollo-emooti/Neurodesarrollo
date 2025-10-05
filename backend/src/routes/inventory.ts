@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -42,7 +42,7 @@ router.get('/',
     query('testType').optional().isIn(['LINK', 'FISICA']).withMessage('Invalid test type'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -139,12 +139,12 @@ router.get('/',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'InventoryItem', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'InventoryItem', undefined, {
       filters: { search, category, status, location, stockControlEnabled, testType },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: items,
       meta: {
@@ -164,7 +164,7 @@ router.get('/:id',
     param('id').isString().withMessage('Inventory item ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     const item = await prisma.inventoryItem.findUnique({
@@ -219,7 +219,7 @@ router.get('/:id',
     // Set audit data
     setAuditData(req, AuditAction.DATA_ACCESS, 'InventoryItem', id);
 
-    res.json({
+    return res.json({
       success: true,
       data: item,
       timestamp: new Date().toISOString(),
@@ -253,7 +253,7 @@ router.post('/',
     body('requiresTablet').optional().isBoolean().withMessage('Requires tablet must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const itemData = req.body;
 
     // Check if code already exists
@@ -358,7 +358,7 @@ router.put('/:id',
     body('requiresTablet').optional().isBoolean().withMessage('Requires tablet must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
@@ -430,7 +430,7 @@ router.put('/:id',
       updatedFields: Object.keys(updateData),
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: item,
       timestamp: new Date().toISOString(),
@@ -445,7 +445,7 @@ router.delete('/:id',
     param('id').isString().withMessage('Inventory item ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if item exists
@@ -494,7 +494,7 @@ router.delete('/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Inventory item deleted successfully' },
       timestamp: new Date().toISOString(),
@@ -504,7 +504,7 @@ router.delete('/:id',
 
 // Get inventory statistics
 router.get('/statistics/overview',
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     // Get inventory statistics
     const [
       totalItems,
@@ -577,11 +577,11 @@ router.get('/statistics/overview',
     };
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'InventoryItem', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'InventoryItem', undefined, {
       action: 'STATISTICS',
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: statistics,
       timestamp: new Date().toISOString(),
@@ -598,7 +598,7 @@ router.post('/:id/stock',
     body('reason').optional().isString().withMessage('Reason must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const { operation, quantity, reason } = req.body;
 
@@ -665,7 +665,7 @@ router.post('/:id/stock',
       updatedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: updatedItem,
       timestamp: new Date().toISOString(),

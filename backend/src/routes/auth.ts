@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import jwt from 'jsonwebtoken';
@@ -12,20 +12,27 @@ const router = Router();
 
 // Configure Google OAuth Strategy
 passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID!,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: process.env.GOOGLE_CALLBACK_URL!,
+  clientID: process.env['GOOGLE_CLIENT_ID']!,
+  clientSecret: process.env['GOOGLE_CLIENT_SECRET']!,
+  callbackURL: process.env['GOOGLE_CALLBACK_URL']!,
 }, async (accessToken, refreshToken, profile, done) => {
   try {
+    const email = profile.emails?.[0]?.value;
+
     logger.info('Google OAuth callback received:', {
       profileId: profile.id,
-      email: profile.emails?.[0]?.value,
+      email: email,
       name: profile.displayName,
     });
 
+    if (!email) {
+      logger.error('No email found in Google profile');
+      return done(new Error('No email found in Google profile'), undefined);
+    }
+
     // Check if user exists
     let user = await prisma.user.findUnique({
-      where: { email: profile.emails?.[0]?.value },
+      where: { email },
     });
 
     if (user) {
@@ -40,7 +47,7 @@ passport.use(new GoogleStrategy({
       // Create new user with default role
       user = await prisma.user.create({
         data: {
-          email: profile.emails?.[0]?.value!,
+          email: email,
           fullName: profile.displayName || 'Usuario',
           userType: 'FAMILIA', // Default role
           status: 'ACTIVE',
@@ -57,7 +64,7 @@ passport.use(new GoogleStrategy({
     return done(null, user);
   } catch (error) {
     logger.error('Error in Google OAuth strategy:', error);
-    return done(error, null);
+    return done(error as Error, undefined);
   }
 }));
 
@@ -78,35 +85,37 @@ passport.deserializeUser(async (id: string, done) => {
         userType: true,
         status: true,
         active: true,
+        centerId: true,
+        centerIds: true,
       },
     });
     done(null, user);
   } catch (error) {
     logger.error('Error deserializing user:', error);
-    done(error, null);
+    done(error as Error, undefined);
   }
 });
 
 // Generate JWT token
 const generateToken = (user: any) => {
-  return jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-      userType: user.userType,
-    },
-    process.env.JWT_SECRET!,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
+  const payload = {
+    id: user.id,
+    email: user.email,
+    userType: user.userType,
+  };
+  const secret = process.env['JWT_SECRET']!;
+  return jwt.sign(payload, secret, {
+    expiresIn: process.env['JWT_EXPIRES_IN'] || '7d'
+  } as jwt.SignOptions);
 };
 
 // Generate refresh token
 const generateRefreshToken = (user: any) => {
-  return jwt.sign(
-    { id: user.id },
-    process.env.JWT_REFRESH_SECRET!,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d' }
-  );
+  const payload = { id: user.id };
+  const secret = process.env.JWT_REFRESH_SECRET!;
+  return jwt.sign(payload, secret, {
+    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d'
+  } as jwt.SignOptions);
 };
 
 // Google OAuth login
@@ -117,7 +126,7 @@ router.get('/google', passport.authenticate('google', {
 // Google OAuth callback
 router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login?error=auth_failed' }),
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     try {
       const user = req.user;
       
@@ -163,7 +172,7 @@ router.get('/google/callback',
 );
 
 // Get current user
-router.get('/me', asyncHandler(async (req: any, res) => {
+router.get('/me', asyncHandler(async (req: any, res: Response) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
     
@@ -212,7 +221,7 @@ router.get('/me', asyncHandler(async (req: any, res) => {
       throw new CustomError('Account is inactive', 403, 'ACCOUNT_INACTIVE');
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: user,
       timestamp: new Date().toISOString(),
@@ -226,7 +235,7 @@ router.get('/me', asyncHandler(async (req: any, res) => {
 }));
 
 // Refresh token
-router.post('/refresh', asyncHandler(async (req, res) => {
+router.post('/refresh', asyncHandler(async (req: Request, res: Response) => {
   try {
     const { refreshToken } = req.body;
     
@@ -260,7 +269,7 @@ router.post('/refresh', asyncHandler(async (req, res) => {
     const newToken = generateToken(user);
     const newRefreshToken = generateRefreshToken(user);
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         token: newToken,
@@ -278,7 +287,7 @@ router.post('/refresh', asyncHandler(async (req, res) => {
 }));
 
 // Logout
-router.post('/logout', asyncHandler(async (req: any, res) => {
+router.post('/logout', asyncHandler(async (req: any, res: Response) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
     
@@ -301,14 +310,14 @@ router.post('/logout', asyncHandler(async (req: any, res) => {
       );
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Logged out successfully' },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
     // Even if token is invalid, consider logout successful
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Logged out successfully' },
       timestamp: new Date().toISOString(),

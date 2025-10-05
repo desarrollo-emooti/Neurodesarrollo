@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -48,7 +48,7 @@ router.get('/',
     query('academicYear').optional().isString().withMessage('Academic year must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -191,12 +191,12 @@ router.get('/',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'TestAssignment', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'TestAssignment', undefined, {
       filters: { search, studentId, centerId, etapa, course, classGroup, testTitle, testStatus, consentGiven, priority },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: assignments,
       meta: {
@@ -216,7 +216,7 @@ router.get('/:id',
     param('id').isString().withMessage('Test assignment ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     const assignment = await prisma.testAssignment.findUnique({
@@ -325,7 +325,7 @@ router.get('/:id',
     // Set audit data
     setAuditData(req, AuditAction.DATA_ACCESS, 'TestAssignment', id);
 
-    res.json({
+    return res.json({
       success: true,
       data: assignment,
       timestamp: new Date().toISOString(),
@@ -345,7 +345,7 @@ router.post('/',
     body('consentGiven').optional().isIn(['SI', 'NO', 'PENDIENTE', 'NA']).withMessage('Invalid consent status'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const assignmentData = req.body;
 
     // Check if student exists
@@ -472,7 +472,7 @@ router.put('/:id',
     body('active').optional().isBoolean().withMessage('Active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
@@ -563,7 +563,7 @@ router.put('/:id',
       updatedFields: Object.keys(updateData),
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: assignment,
       timestamp: new Date().toISOString(),
@@ -578,7 +578,7 @@ router.delete('/:id',
     param('id').isString().withMessage('Test assignment ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if assignment exists
@@ -613,7 +613,7 @@ router.delete('/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Test assignment deleted successfully' },
       timestamp: new Date().toISOString(),
@@ -627,7 +627,7 @@ router.get('/:id/qr',
     param('id').isString().withMessage('Test assignment ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     const assignment = await prisma.testAssignment.findUnique({
@@ -678,7 +678,7 @@ router.get('/:id/qr',
         },
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: {
           qrCodeUrl,
@@ -707,7 +707,7 @@ router.post('/bulk',
     body('data').optional().isObject().withMessage('Data must be an object'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { action, assignmentIds, data } = req.body;
 
     switch (action) {
@@ -722,14 +722,14 @@ router.post('/bulk',
         });
 
         // Set audit data
-        setAuditData(req, AuditAction.DATA_MODIFICATION, 'TestAssignment', null, {
+        setAuditData(req, AuditAction.DATA_MODIFICATION, 'TestAssignment', undefined, {
           action: 'BULK_UPDATE',
           assignmentIds,
           updatedFields: Object.keys(data),
           affectedCount: updatedAssignments.count,
         });
 
-        res.json({
+        return res.json({
           success: true,
           data: {
             message: `${updatedAssignments.count} test assignments updated successfully`,
@@ -737,7 +737,6 @@ router.post('/bulk',
           },
           timestamp: new Date().toISOString(),
         });
-        break;
 
       case 'delete':
         const deletedAssignments = await prisma.testAssignment.updateMany({
@@ -746,13 +745,13 @@ router.post('/bulk',
         });
 
         // Set audit data
-        setAuditData(req, AuditAction.DATA_DELETION, 'TestAssignment', null, {
+        setAuditData(req, AuditAction.DATA_DELETION, 'TestAssignment', undefined, {
           action: 'BULK_DELETE',
           assignmentIds,
           affectedCount: deletedAssignments.count,
         });
 
-        res.json({
+        return res.json({
           success: true,
           data: {
             message: `${deletedAssignments.count} test assignments deleted successfully`,
@@ -760,7 +759,6 @@ router.post('/bulk',
           },
           timestamp: new Date().toISOString(),
         });
-        break;
 
       case 'export':
         const assignments = await prisma.testAssignment.findMany({
@@ -802,18 +800,17 @@ router.post('/bulk',
         });
 
         // Set audit data
-        setAuditData(req, AuditAction.DATA_EXPORT, 'TestAssignment', null, {
+        setAuditData(req, AuditAction.DATA_EXPORT, 'TestAssignment', undefined, {
           action: 'BULK_EXPORT',
           assignmentIds,
           exportedCount: assignments.length,
         });
 
-        res.json({
+        return res.json({
           success: true,
           data: assignments,
           timestamp: new Date().toISOString(),
         });
-        break;
 
       default:
         throw validationErrorHandler('Invalid bulk action');

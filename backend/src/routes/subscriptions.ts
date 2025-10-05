@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -41,7 +41,7 @@ router.get('/',
     query('isRecurring').optional().isBoolean().withMessage('Is recurring must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -143,12 +143,12 @@ router.get('/',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'SubscriptionConfiguration', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'SubscriptionConfiguration', undefined, {
       filters: { search, paymentType, centerId, isActive, isRecurring },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: configurations,
       meta: {
@@ -168,7 +168,7 @@ router.get('/:id',
     param('id').isString().withMessage('Subscription configuration ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     const configuration = await prisma.subscriptionConfiguration.findUnique({
@@ -262,7 +262,7 @@ router.get('/:id',
     // Set audit data
     setAuditData(req, AuditAction.DATA_ACCESS, 'SubscriptionConfiguration', id);
 
-    res.json({
+    return res.json({
       success: true,
       data: configuration,
       timestamp: new Date().toISOString(),
@@ -286,7 +286,7 @@ router.post('/',
     body('nextBillingDate').optional().isISO8601().withMessage('Next billing date must be a valid date'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const configurationData = req.body;
 
     // Check if center exists (for B2B subscriptions)
@@ -424,7 +424,7 @@ router.put('/:id',
     body('isActive').optional().isBoolean().withMessage('Is active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
@@ -542,7 +542,7 @@ router.put('/:id',
       updatedFields: Object.keys(updateData),
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: configuration,
       timestamp: new Date().toISOString(),
@@ -557,7 +557,7 @@ router.delete('/:id',
     param('id').isString().withMessage('Subscription configuration ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if configuration exists
@@ -606,7 +606,7 @@ router.delete('/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Subscription configuration deleted successfully' },
       timestamp: new Date().toISOString(),
@@ -623,7 +623,7 @@ router.post('/:id/generate-billing',
     body('billingDate').isISO8601().withMessage('Billing date is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const { billingPeriod, billingDate } = req.body;
 
@@ -695,7 +695,7 @@ router.post('/:id/generate-billing',
         numberOfStudents: configuration.students.length,
         pricePerStudent: configuration.pricePerStudent,
         totalAmount: configuration.students.length * configuration.pricePerStudent,
-        status: 'PENDING',
+        status: 'PENDIENTE',
         generatedAutomatically: false,
       },
       select: {
@@ -732,7 +732,7 @@ router.post('/:id/generate-billing',
       generatedBy: req.user.id,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: billing,
       timestamp: new Date().toISOString(),

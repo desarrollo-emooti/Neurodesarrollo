@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -31,7 +31,7 @@ const validateRequest = (req: any, res: any, next: any) => {
 
 // Get current user profile
 router.get('/',
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const userId = req.user.id;
 
     const user = await prisma.user.findUnique({
@@ -74,14 +74,6 @@ router.get('/',
             type: true,
           },
         },
-        centers: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-            type: true,
-          },
-        },
       },
     });
 
@@ -94,7 +86,7 @@ router.get('/',
       action: 'VIEW_PROFILE',
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: user,
       timestamp: new Date().toISOString(),
@@ -122,7 +114,7 @@ router.put('/',
     body('bankName').optional().isString().withMessage('Bank name must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const userId = req.user.id;
     const updateData = req.body;
 
@@ -177,14 +169,6 @@ router.put('/',
             type: true,
           },
         },
-        centers: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-            type: true,
-          },
-        },
       },
     });
 
@@ -201,7 +185,7 @@ router.put('/',
       updatedFields: Object.keys(updateData),
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: user,
       timestamp: new Date().toISOString(),
@@ -213,11 +197,11 @@ router.put('/',
 router.put('/password',
   [
     body('currentPassword').isString().withMessage('Current password is required'),
-    body('newPassword').isString().min(8).withMessage('New password must be at least 8 characters'),
+    body('newPassword').isString().isLength({ min: 8 }).withMessage('New password must be at least 8 characters'),
     body('confirmPassword').isString().withMessage('Confirm password is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const userId = req.user.id;
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
@@ -253,7 +237,7 @@ router.put('/password',
       action: 'CHANGE_PASSWORD',
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Password changed successfully',
       timestamp: new Date().toISOString(),
@@ -270,7 +254,7 @@ router.get('/activity',
     query('endDate').optional().isISO8601().withMessage('End date must be a valid date'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const userId = req.user.id;
     const {
       page = 1,
@@ -317,13 +301,13 @@ router.get('/activity',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'AuditLog', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'AuditLog', undefined, {
       action: 'VIEW_USER_ACTIVITY',
       filters: { startDate, endDate },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: logs,
       meta: {
@@ -339,7 +323,7 @@ router.get('/activity',
 
 // Get user statistics
 router.get('/statistics',
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const userId = req.user.id;
 
     const [
@@ -424,7 +408,7 @@ router.get('/statistics',
       action: 'VIEW_USER_STATISTICS',
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: statistics,
       timestamp: new Date().toISOString(),
@@ -434,7 +418,7 @@ router.get('/statistics',
 
 // Get user preferences
 router.get('/preferences',
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const userId = req.user.id;
 
     // TODO: Implement user preferences
@@ -465,7 +449,7 @@ router.get('/preferences',
       action: 'VIEW_USER_PREFERENCES',
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: preferences,
       timestamp: new Date().toISOString(),
@@ -485,7 +469,7 @@ router.put('/preferences',
     body('dashboard').optional().isObject().withMessage('Dashboard must be an object'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const userId = req.user.id;
     const preferences = req.body;
 
@@ -504,7 +488,7 @@ router.put('/preferences',
       preferences,
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Preferences updated successfully',
       timestamp: new Date().toISOString(),
@@ -519,7 +503,7 @@ router.delete('/',
     body('confirmDeletion').isBoolean().withMessage('Confirm deletion must be true'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const userId = req.user.id;
     const { password, confirmDeletion } = req.body;
 
@@ -554,7 +538,7 @@ router.delete('/',
       action: 'DELETE_USER_ACCOUNT',
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Account deletion request submitted',
       timestamp: new Date().toISOString(),

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -43,7 +43,7 @@ router.get('/',
     query('endDate').optional().isISO8601().withMessage('End date must be a valid date'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -150,12 +150,12 @@ router.get('/',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'Invoice', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'Invoice', undefined, {
       filters: { search, clientType, status, paymentMethod, isCreditNote, startDate, endDate },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: invoices,
       meta: {
@@ -175,7 +175,7 @@ router.get('/:id',
     param('id').isString().withMessage('Invoice ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     const invoice = await prisma.invoice.findUnique({
@@ -243,7 +243,7 @@ router.get('/:id',
     // Set audit data
     setAuditData(req, AuditAction.DATA_ACCESS, 'Invoice', id);
 
-    res.json({
+    return res.json({
       success: true,
       data: invoice,
       timestamp: new Date().toISOString(),
@@ -272,7 +272,7 @@ router.post('/',
     body('originalInvoiceId').optional().isString().withMessage('Original invoice ID must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const invoiceData = req.body;
 
     // Check if all billing IDs exist
@@ -409,7 +409,7 @@ router.put('/:id',
     body('stripeInvoicePdfUrl').optional().isString().withMessage('Stripe invoice PDF URL must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
@@ -472,7 +472,7 @@ router.put('/:id',
       updatedFields: Object.keys(updateData),
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: invoice,
       timestamp: new Date().toISOString(),
@@ -487,7 +487,7 @@ router.delete('/:id',
     param('id').isString().withMessage('Invoice ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if invoice exists
@@ -533,7 +533,7 @@ router.delete('/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Invoice deleted successfully' },
       timestamp: new Date().toISOString(),
@@ -550,7 +550,7 @@ router.post('/:id/credit-note',
     body('amount').isNumeric().withMessage('Amount is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const { reason, amount } = req.body;
 
@@ -686,7 +686,7 @@ router.post('/:id/credit-note',
 
 // Get invoice statistics
 router.get('/statistics/overview',
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
 
@@ -767,11 +767,11 @@ router.get('/statistics/overview',
     };
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'Invoice', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'Invoice', undefined, {
       action: 'STATISTICS',
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: statistics,
       timestamp: new Date().toISOString(),

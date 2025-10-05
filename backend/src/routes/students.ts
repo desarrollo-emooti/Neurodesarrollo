@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -43,7 +43,7 @@ router.get('/',
     query('paymentStatus').optional().isIn(['PAGADO', 'PENDIENTE', 'NA']).withMessage('Invalid payment status'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -174,12 +174,12 @@ router.get('/',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'Student', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'Student', undefined, {
       filters: { search, etapa, centerId, course, classGroup, consentGiven, paymentStatus },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: students,
       meta: {
@@ -199,7 +199,7 @@ router.get('/:id',
     param('id').isString().withMessage('Student ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if user can access this student's data
@@ -266,14 +266,7 @@ router.get('/:id',
             relationshipType: true,
             isPrimaryContact: true,
             isEmergencyContact: true,
-            familyUser: {
-              select: {
-                id: true,
-                fullName: true,
-                email: true,
-                phone: true,
-              },
-            },
+            familyUserId: true,
           },
         },
       },
@@ -309,8 +302,8 @@ router.get('/:id',
     }
 
     if (req.user.userType === 'FAMILIA') {
-      const isFamilyMember = student.familyRelations.some(
-        rel => rel.familyUser.id === req.user.id
+      const isFamilyMember = student.familyRelations?.some(
+        (rel: any) => rel.familyUserId === req.user.id
       );
       if (!isFamilyMember) {
         return res.status(403).json({
@@ -327,7 +320,7 @@ router.get('/:id',
     // Set audit data
     setAuditData(req, AuditAction.DATA_ACCESS, 'Student', id);
 
-    res.json({
+    return res.json({
       success: true,
       data: student,
       timestamp: new Date().toISOString(),
@@ -361,7 +354,7 @@ router.post('/',
     body('paymentStatus').optional().isIn(['PAGADO', 'PENDIENTE', 'NA']).withMessage('Invalid payment status'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const studentData = req.body;
 
     // Check if center exists and user has access
@@ -514,7 +507,7 @@ router.put('/:id',
     body('active').optional().isBoolean().withMessage('Active must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
@@ -625,7 +618,7 @@ router.put('/:id',
       updatedFields: Object.keys(updateData),
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: student,
       timestamp: new Date().toISOString(),
@@ -640,7 +633,7 @@ router.delete('/:id',
     param('id').isString().withMessage('Student ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if student exists
@@ -672,7 +665,7 @@ router.delete('/:id',
       deletedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: { message: 'Student deleted successfully' },
       timestamp: new Date().toISOString(),
@@ -691,7 +684,7 @@ router.post('/:id/family',
     body('isEmergencyContact').optional().isBoolean().withMessage('Is emergency contact must be a boolean'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const { familyUserId, relationshipType, isPrimaryContact = false, isEmergencyContact = false } = req.body;
 
@@ -733,16 +726,6 @@ router.post('/:id/family',
         relationshipType,
         isPrimaryContact,
         isEmergencyContact,
-      },
-      include: {
-        familyUser: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            phone: true,
-          },
-        },
       },
     });
 

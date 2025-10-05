@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -32,7 +32,7 @@ const validateRequest = (req: any, res: any, next: any) => {
 // Get security dashboard data
 router.get('/dashboard',
   requireAdmin,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -114,11 +114,11 @@ router.get('/dashboard',
     };
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'SecurityDashboard', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'SecurityDashboard', undefined, {
       action: 'DASHBOARD_VIEW',
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: dashboardData,
       timestamp: new Date().toISOString(),
@@ -139,7 +139,7 @@ router.get('/audit-logs',
     query('endDate').optional().isISO8601().withMessage('End date must be a valid date'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -211,12 +211,12 @@ router.get('/audit-logs',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'AuditLog', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'AuditLog', undefined, {
       filters: { userId, action, resourceType, startDate, endDate },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: logs,
       meta: {
@@ -243,7 +243,7 @@ router.get('/anomaly-alerts',
     query('endDate').optional().isISO8601().withMessage('End date must be a valid date'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -325,12 +325,12 @@ router.get('/anomaly-alerts',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'AnomalyAlert', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'AnomalyAlert', undefined, {
       filters: { type, severity, status, startDate, endDate },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: alerts,
       meta: {
@@ -353,7 +353,7 @@ router.put('/anomaly-alerts/:id',
     body('resolutionNotes').optional().isString().withMessage('Resolution notes must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const { status, resolutionNotes } = req.body;
 
@@ -409,7 +409,7 @@ router.put('/anomaly-alerts/:id',
       resolvedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: alert,
       timestamp: new Date().toISOString(),
@@ -427,7 +427,7 @@ router.get('/retention-policies',
     query('status').optional().isIn(['ACTIVE', 'INACTIVE', 'SUSPENDED']).withMessage('Invalid status'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -478,12 +478,12 @@ router.get('/retention-policies',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'RetentionPolicy', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'RetentionPolicy', undefined, {
       filters: { entityType, status },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: policies,
       meta: {
@@ -511,7 +511,7 @@ router.post('/retention-policies',
     body('notifyBeforeDays').optional().isInt({ min: 0 }).withMessage('Notify before days must be a non-negative integer'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const policyData = req.body;
 
     // Check if policy already exists for this entity type
@@ -591,7 +591,7 @@ router.get('/retention-jobs',
     query('status').optional().isIn(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'CANCELLED']).withMessage('Invalid status'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -643,12 +643,12 @@ router.get('/retention-jobs',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'DataRetentionJob', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'DataRetentionJob', undefined, {
       filters: { entityType, status },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: jobs,
       meta: {
@@ -669,7 +669,7 @@ router.post('/retention-jobs/:id/execute',
     param('id').isString().withMessage('Data retention job ID is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
 
     // Check if job exists
@@ -719,7 +719,7 @@ router.post('/retention-jobs/:id/execute',
       executedBy: req.user.id,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: updatedJob,
       timestamp: new Date().toISOString(),
@@ -737,7 +737,7 @@ router.get('/anonymization-logs',
     query('requestedBy').optional().isString().withMessage('Requested by must be a string'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const {
       page = 1,
       limit = 20,
@@ -784,12 +784,12 @@ router.get('/anonymization-logs',
     ]);
 
     // Set audit data
-    setAuditData(req, AuditAction.DATA_ACCESS, 'AnonymizationLog', null, {
+    setAuditData(req, AuditAction.DATA_ACCESS, 'AnonymizationLog', undefined, {
       filters: { entityType, requestedBy },
       pagination: { page, limit, total },
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: logs,
       meta: {
@@ -815,7 +815,7 @@ router.post('/anonymization-logs',
     body('purpose').isString().withMessage('Purpose is required'),
   ],
   validateRequest,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const logData = req.body;
 
     // Create anonymization log

@@ -3,6 +3,7 @@ import { asyncHandler } from '../middleware/errorHandler';
 import RGPDService from '../services/rgpdService';
 import { logger } from '../utils/logger';
 import { AuditAction } from '@prisma/client';
+import { prisma } from '../config/database';
 
 // Audit Logs
 export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => {
@@ -16,15 +17,24 @@ export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => 
     limit = 20,
   } = req.query;
 
-  const filters = {
-    userId: userId as string,
-    action: action as any,
-    entityType: entityType as string,
-    startDate: startDate ? new Date(startDate as string) : undefined,
-    endDate: endDate ? new Date(endDate as string) : undefined,
+  const filters: {
+    userId?: string;
+    action?: any;
+    entityType?: string;
+    startDate?: Date;
+    endDate?: Date;
+    page?: number;
+    limit?: number;
+  } = {
     page: parseInt(page as string),
     limit: parseInt(limit as string),
   };
+
+  if (userId) filters.userId = userId as string;
+  if (action) filters.action = action as any;
+  if (entityType) filters.entityType = entityType as string;
+  if (startDate) filters.startDate = new Date(startDate as string);
+  if (endDate) filters.endDate = new Date(endDate as string);
 
   const result = await RGPDService.getAuditLogs(filters);
 
@@ -38,6 +48,17 @@ export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => 
 
 export const getAuditLogById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'ID is required',
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }
 
   const auditLog = await prisma.auditLog.findUnique({
     where: { id },
@@ -63,7 +84,7 @@ export const getAuditLogById = asyncHandler(async (req: Request, res: Response) 
     });
   }
 
-  res.json({
+  return res.json({
     success: true,
     data: auditLog,
     timestamp: new Date().toISOString(),
@@ -82,15 +103,24 @@ export const getAnomalyAlerts = asyncHandler(async (req: Request, res: Response)
     limit = 20,
   } = req.query;
 
-  const filters = {
-    userId: userId as string,
-    severity: severity as any,
-    status: status as any,
-    startDate: startDate ? new Date(startDate as string) : undefined,
-    endDate: endDate ? new Date(endDate as string) : undefined,
+  const filters: {
+    userId?: string;
+    severity?: any;
+    status?: any;
+    startDate?: Date;
+    endDate?: Date;
+    page?: number;
+    limit?: number;
+  } = {
     page: parseInt(page as string),
     limit: parseInt(limit as string),
   };
+
+  if (userId) filters.userId = userId as string;
+  if (severity) filters.severity = severity as any;
+  if (status) filters.status = status as any;
+  if (startDate) filters.startDate = new Date(startDate as string);
+  if (endDate) filters.endDate = new Date(endDate as string);
 
   const result = await RGPDService.getAnomalyAlerts(filters);
 
@@ -106,12 +136,12 @@ export const resolveAnomaly = asyncHandler(async (req: Request, res: Response) =
   const { id } = req.params;
   const { resolution } = req.body;
 
-  if (!resolution) {
+  if (!id || !resolution) {
     return res.status(400).json({
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
-        message: 'Resolution is required',
+        message: 'ID and Resolution are required',
       },
       timestamp: new Date().toISOString(),
     });
@@ -119,7 +149,7 @@ export const resolveAnomaly = asyncHandler(async (req: Request, res: Response) =
 
   const anomaly = await RGPDService.resolveAnomaly(id, resolution);
 
-  res.json({
+  return res.json({
     success: true,
     data: anomaly,
     timestamp: new Date().toISOString(),
@@ -172,7 +202,7 @@ export const createPseudonymMapping = asyncHandler(async (req: Request, res: Res
     entityId
   );
 
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     data: mapping,
     timestamp: new Date().toISOString(),
@@ -227,10 +257,10 @@ export const createRetentionPolicy = asyncHandler(async (req: Request, res: Resp
     entityType,
     retentionPeriodDays,
     description,
-    req.user?.id || 'system'
+    (req as any).user?.id || 'system'
   );
 
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     data: policy,
     timestamp: new Date().toISOString(),
@@ -279,7 +309,7 @@ export const executeDataRetention = asyncHandler(async (req: Request, res: Respo
 
   const result = await RGPDService.executeDataRetention(entityType);
 
-  res.json({
+  return res.json({
     success: true,
     data: result,
     message: `Data retention job started for ${entityType}`,
@@ -330,12 +360,12 @@ export const createDataSubjectRequest = asyncHandler(async (req: Request, res: R
   }
 
   const request = await RGPDService.processDataSubjectRequest(
-    req.user?.id || 'system',
+    (req as any).user?.id || 'system',
     requestType,
     details
   );
 
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     data: request,
     timestamp: new Date().toISOString(),
@@ -396,10 +426,10 @@ export const createPrivacyImpactAssessment = asyncHandler(async (req: Request, r
     processingPurposes,
     riskLevel,
     mitigationMeasures || [],
-    req.user?.id || 'system'
+    (req as any).user?.id || 'system'
   );
 
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     data: assessment,
     timestamp: new Date().toISOString(),
@@ -416,13 +446,21 @@ export const getConsentHistory = asyncHandler(async (req: Request, res: Response
     limit = 20,
   } = req.query;
 
-  const filters = {
-    userId: userId as string,
-    consentType: consentType as string,
-    given: given === 'true' ? true : given === 'false' ? false : undefined,
+  const filters: {
+    userId?: string;
+    consentType?: string;
+    given?: boolean;
+    page?: number;
+    limit?: number;
+  } = {
     page: parseInt(page as string),
     limit: parseInt(limit as string),
   };
+
+  if (userId) filters.userId = userId as string;
+  if (consentType) filters.consentType = consentType as string;
+  if (given === 'true') filters.given = true;
+  if (given === 'false') filters.given = false;
 
   const result = await RGPDService.getConsentHistory(filters);
 
@@ -464,7 +502,7 @@ export const recordConsent = asyncHandler(async (req: Request, res: Response) =>
     details
   );
 
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     data: consent,
     timestamp: new Date().toISOString(),
@@ -478,25 +516,20 @@ export const getRGPDDashboard = asyncHandler(async (req: Request, res: Response)
     anomaliesCount,
     pendingAnomaliesCount,
     retentionPoliciesCount,
-    dataSubjectRequestsCount,
-    pendingRequestsCount,
-    consentRecordsCount,
     recentAuditLogs,
     recentAnomalies,
   ] = await Promise.all([
     prisma.auditLog.count(),
     prisma.anomalyAlert.count(),
-    prisma.anomalyAlert.count({ where: { status: 'PENDING' } }),
+    prisma.anomalyAlert.count({ where: { status: 'ACTIVE' } }),
     prisma.retentionPolicy.count(),
-    prisma.dataSubjectRequest.count(),
-    prisma.dataSubjectRequest.count({ where: { status: 'PENDING' } }),
-    prisma.consent.count(),
     prisma.auditLog.findMany({
       take: 10,
       orderBy: { timestamp: 'desc' },
       include: {
         user: {
           select: {
+            id: true,
             fullName: true,
             email: true,
           },
@@ -509,6 +542,7 @@ export const getRGPDDashboard = asyncHandler(async (req: Request, res: Response)
       include: {
         user: {
           select: {
+            id: true,
             fullName: true,
             email: true,
           },
@@ -517,7 +551,7 @@ export const getRGPDDashboard = asyncHandler(async (req: Request, res: Response)
     }),
   ]);
 
-  res.json({
+  return res.json({
     success: true,
     data: {
       statistics: {
@@ -525,9 +559,6 @@ export const getRGPDDashboard = asyncHandler(async (req: Request, res: Response)
         anomaliesCount,
         pendingAnomaliesCount,
         retentionPoliciesCount,
-        dataSubjectRequestsCount,
-        pendingRequestsCount,
-        consentRecordsCount,
       },
       recentActivity: {
         auditLogs: recentAuditLogs,
