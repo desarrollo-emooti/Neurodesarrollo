@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
   Users,
@@ -27,6 +27,12 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  History,
+  FileBarChart,
+  DollarSign,
+  Wrench,
+  UserCheck,
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useAppStore from '../store/appStore';
@@ -36,182 +42,242 @@ const Sidebar = () => {
   const location = useLocation();
   const { user } = useAuthStore();
   const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useAppStore();
+  const [expandedGroups, setExpandedGroups] = useState({
+    users: true,
+    tests: true,
+    financial: false,
+    resources: false,
+    reports: false,
+    security: false,
+    config: false,
+  });
 
-  // Navigation items based on user role
-  const getNavigationItems = () => {
-    const baseItems = [
-      {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutDashboard,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR', 'EXAMINADOR', 'FAMILIA'],
-      },
-    ];
-
-    const adminItems = [
-      {
-        title: 'Gestión de Usuarios',
-        href: '/users',
-        icon: Users,
-        roles: ['ADMINISTRADOR'],
-      },
-      {
-        title: 'Gestión de Centros',
-        href: '/centers',
-        icon: Building2,
-        roles: ['ADMINISTRADOR'],
-      },
-      {
-        title: 'Bases de Datos',
-        href: '/database',
-        icon: Database,
-        roles: ['ADMINISTRADOR'],
-      },
-    ];
-
-    const clinicalItems = [
-      {
-        title: 'Alumnos',
-        href: '/students',
-        icon: GraduationCap,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-      },
-      {
-        title: 'Asignación de Pruebas',
-        href: '/test-assignments',
-        icon: ClipboardList,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-      },
-      {
-        title: 'Resultados de Pruebas',
-        href: '/test-results',
-        icon: FileText,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'EXAMINADOR'],
-      },
-      {
-        title: 'Pruebas EMOOTI',
-        href: '/emoti-tests',
-        icon: Brain,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'EXAMINADOR'],
-      },
-    ];
-
-    const resourceItems = [
-      {
-        title: 'Agenda',
-        href: '/agenda',
-        icon: Calendar,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-      },
-      {
-        title: 'Dispositivos',
-        href: '/devices',
-        icon: Tablet,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-      },
-      {
-        title: 'Inventario',
-        href: '/inventory',
-        icon: Package,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-      },
-    ];
-
-    const financialItems = [
-      {
-        title: 'Suscripciones',
-        href: '/subscriptions',
-        icon: CreditCard,
-        roles: ['ADMINISTRADOR'],
-      },
-      {
-        title: 'Facturación',
-        href: '/invoices',
-        icon: Receipt,
-        roles: ['ADMINISTRADOR'],
-      },
-    ];
-
-    const securityItems = [
-      {
-        title: 'Seguridad RGPD',
-        href: '/security',
-        icon: Shield,
-        roles: ['ADMINISTRADOR'],
-      },
-      {
-        title: 'Autorizaciones',
-        href: '/authorizations',
-        icon: Shield,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-      },
-    ];
-
-    const configItems = [
-      {
-        title: 'Configuración',
-        href: '/configuration',
-        icon: Settings,
-        roles: ['ADMINISTRADOR'],
-      },
-      {
-        title: 'Exportar Datos',
-        href: '/export',
-        icon: Download,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-      },
-      {
-        title: 'Importar Datos',
-        href: '/import',
-        icon: Upload,
-        roles: ['ADMINISTRADOR'],
-      },
-    ];
-
-    const reportItems = [
-      {
-        title: 'Tutoriales',
-        href: '/tutorials',
-        icon: BookOpen,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR', 'EXAMINADOR', 'FAMILIA'],
-      },
-      {
-        title: 'Reportes',
-        href: '/reports',
-        icon: BarChart3,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-      },
-      {
-        title: 'Estadísticas',
-        href: '/statistics',
-        icon: TrendingUp,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-      },
-    ];
-
-    const profileItems = [
-      {
-        title: 'Mi Perfil',
-        href: '/profile',
-        icon: User,
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR', 'EXAMINADOR', 'FAMILIA'],
-      },
-    ];
-
-    return [
-      ...baseItems,
-      ...adminItems,
-      ...clinicalItems,
-      ...resourceItems,
-      ...financialItems,
-      ...securityItems,
-      ...configItems,
-      ...reportItems,
-      ...profileItems,
-    ].filter(item => item.roles.includes(user?.userType));
+  const toggleGroup = (groupName) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupName]: !prev[groupName]
+    }));
   };
 
-  const navigationItems = getNavigationItems();
+  // Navigation groups based on user role
+  const getNavigationGroups = () => {
+    return [
+      {
+        id: 'dashboard',
+        title: 'Dashboard',
+        icon: LayoutDashboard,
+        href: '/dashboard',
+        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR', 'EXAMINADOR', 'FAMILIA'],
+        single: true,
+      },
+      {
+        id: 'users',
+        title: 'Gestión de Usuarios',
+        icon: Users,
+        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+        items: [
+          {
+            title: 'Miembros',
+            href: '/users',
+            icon: UserCheck,
+            roles: ['ADMINISTRADOR'],
+          },
+          {
+            title: 'Alumnos',
+            href: '/students',
+            icon: GraduationCap,
+            roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+          },
+          {
+            title: 'Gestión de Centros',
+            href: '/centers',
+            icon: Building2,
+            roles: ['ADMINISTRADOR'],
+          },
+          {
+            title: 'Exportar Usuarios',
+            href: '/export',
+            icon: Download,
+            roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+          },
+        ],
+      },
+      {
+        id: 'tests',
+        title: 'Gestión de Pruebas',
+        icon: Brain,
+        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR', 'EXAMINADOR'],
+        items: [
+          {
+            title: 'Asignación de Pruebas',
+            href: '/test-assignments',
+            icon: ClipboardList,
+            roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+          },
+          {
+            title: 'Resultados de Pruebas',
+            href: '/test-results',
+            icon: FileText,
+            roles: ['ADMINISTRADOR', 'CLINICA', 'EXAMINADOR'],
+          },
+          {
+            title: 'Historial por Alumno',
+            href: '/student-history',
+            icon: History,
+            roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+          },
+          {
+            title: 'Import. Automática',
+            href: '/auto-import',
+            icon: Upload,
+            roles: ['ADMINISTRADOR'],
+          },
+          {
+            title: 'Import. Manual',
+            href: '/import',
+            icon: Upload,
+            roles: ['ADMINISTRADOR'],
+          },
+        ],
+      },
+      {
+        id: 'financial',
+        title: 'Financiero',
+        icon: DollarSign,
+        roles: ['ADMINISTRADOR'],
+        items: [
+          {
+            title: 'Gestión de Suscripciones',
+            href: '/subscriptions',
+            icon: CreditCard,
+            roles: ['ADMINISTRADOR'],
+          },
+          {
+            title: 'Facturación',
+            href: '/invoices',
+            icon: Receipt,
+            roles: ['ADMINISTRADOR'],
+          },
+          {
+            title: 'Historial de Cobros',
+            href: '/payment-history',
+            icon: History,
+            roles: ['ADMINISTRADOR'],
+          },
+        ],
+      },
+      {
+        id: 'agenda',
+        title: 'Agenda',
+        icon: Calendar,
+        href: '/agenda',
+        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+        single: true,
+      },
+      {
+        id: 'resources',
+        title: 'Recursos',
+        icon: Package,
+        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+        items: [
+          {
+            title: 'Dispositivos',
+            href: '/devices',
+            icon: Tablet,
+            roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+          },
+          {
+            title: 'Inventario',
+            href: '/inventory',
+            icon: Package,
+            roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+          },
+        ],
+      },
+      {
+        id: 'reports',
+        title: 'Reportes y Análisis',
+        icon: BarChart3,
+        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+        items: [
+          {
+            title: 'Estadísticas',
+            href: '/statistics',
+            icon: TrendingUp,
+            roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+          },
+          {
+            title: 'Informes',
+            href: '/reports',
+            icon: FileBarChart,
+            roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+          },
+          {
+            title: 'Pruebas',
+            href: '/test-reports',
+            icon: Brain,
+            roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
+          },
+        ],
+      },
+      {
+        id: 'security',
+        title: 'Seguridad y RGPD',
+        icon: Shield,
+        href: '/security',
+        roles: ['ADMINISTRADOR'],
+        single: true,
+      },
+      {
+        id: 'config',
+        title: 'Configuración',
+        icon: Settings,
+        roles: ['ADMINISTRADOR'],
+        items: [
+          {
+            title: 'Valoraciones de Pruebas',
+            href: '/test-ratings',
+            icon: FileBarChart,
+            roles: ['ADMINISTRADOR'],
+          },
+          {
+            title: 'Ajustes',
+            href: '/configuration',
+            icon: Settings,
+            roles: ['ADMINISTRADOR'],
+          },
+          {
+            title: 'Plantillas',
+            href: '/templates',
+            icon: FileText,
+            roles: ['ADMINISTRADOR'],
+          },
+          {
+            title: 'Pruebas EMOOTI',
+            href: '/emoti-tests',
+            icon: Brain,
+            roles: ['ADMINISTRADOR', 'CLINICA', 'EXAMINADOR'],
+          },
+          {
+            title: 'Bases de Datos',
+            href: '/database',
+            icon: Database,
+            roles: ['ADMINISTRADOR'],
+          },
+        ],
+      },
+      {
+        id: 'tutorials',
+        title: 'Tutoriales',
+        icon: BookOpen,
+        href: '/tutorials',
+        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR', 'EXAMINADOR', 'FAMILIA'],
+        single: true,
+      },
+    ].filter(group => group.roles.includes(user?.userType));
+  };
+
+  const navigationGroups = getNavigationGroups();
 
   const NavItem = ({ item }) => {
     const isActive = location.pathname === item.href;
@@ -222,15 +288,15 @@ const Sidebar = () => {
         to={item.href}
         className={({ isActive }) =>
           cn(
-            'flex items-center px-4 py-3 text-sm font-medium transition-colors duration-200',
-            'hover:bg-white hover:text-slate-900 rounded-lg mx-2',
+            'flex items-center px-4 py-2.5 text-sm font-medium transition-colors duration-200',
+            'hover:bg-slate-700 rounded-lg mx-2',
             isActive
-              ? 'bg-white text-slate-900 shadow-lg'
+              ? 'bg-emooti-blue-600 text-white'
               : 'text-slate-300'
           )
         }
       >
-        <Icon className={cn('w-5 h-5', sidebarCollapsed ? 'mx-auto' : 'mr-3')} />
+        <Icon className={cn('w-4 h-4', sidebarCollapsed ? 'mx-auto' : 'mr-3')} />
         {!sidebarCollapsed && (
           <motion.span
             initial={{ opacity: 0 }}
@@ -241,6 +307,100 @@ const Sidebar = () => {
           </motion.span>
         )}
       </NavLink>
+    );
+  };
+
+  const NavGroup = ({ group, index }) => {
+    const Icon = group.icon;
+    const isExpanded = expandedGroups[group.id];
+    const hasActiveChild = group.items?.some(item =>
+      item.roles.includes(user?.userType) && location.pathname === item.href
+    );
+
+    // Si es un item single (sin subitems)
+    if (group.single) {
+      const isActive = location.pathname === group.href;
+      return (
+        <NavLink
+          to={group.href}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center px-4 py-3 text-sm font-medium transition-colors duration-200',
+              'hover:bg-slate-700 rounded-lg mx-2',
+              isActive
+                ? 'bg-emooti-blue-600 text-white'
+                : 'text-slate-300'
+            )
+          }
+        >
+          <Icon className={cn('w-5 h-5', sidebarCollapsed ? 'mx-auto' : 'mr-3')} />
+          {!sidebarCollapsed && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              {group.title}
+            </motion.span>
+          )}
+        </NavLink>
+      );
+    }
+
+    // Grupo con subitems
+    const visibleItems = group.items?.filter(item => item.roles.includes(user?.userType)) || [];
+
+    if (visibleItems.length === 0) return null;
+
+    return (
+      <div className="mb-1">
+        <button
+          onClick={() => toggleGroup(group.id)}
+          className={cn(
+            'w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors duration-200',
+            'hover:bg-slate-700 rounded-lg mx-2',
+            hasActiveChild ? 'text-white' : 'text-slate-300'
+          )}
+        >
+          <div className="flex items-center">
+            <Icon className={cn('w-5 h-5', sidebarCollapsed ? 'mx-auto' : 'mr-3')} />
+            {!sidebarCollapsed && <span>{group.title}</span>}
+          </div>
+          {!sidebarCollapsed && (
+            <ChevronDown
+              className={cn(
+                'w-4 h-4 transition-transform duration-200',
+                isExpanded ? 'transform rotate-180' : ''
+              )}
+            />
+          )}
+        </button>
+
+        <AnimatePresence>
+          {isExpanded && !sidebarCollapsed && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="ml-4 mt-1 space-y-1">
+                {visibleItems.map((item, itemIndex) => (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: itemIndex * 0.05 }}
+                  >
+                    <NavItem item={item} />
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     );
   };
 
@@ -276,14 +436,14 @@ const Sidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 emooti-scrollbar">
         <div className="space-y-1">
-          {navigationItems.map((item, index) => (
+          {navigationGroups.map((group, index) => (
             <motion.div
-              key={item.href}
+              key={group.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.05 }}
             >
-              <NavItem item={item} />
+              <NavGroup group={group} index={index} />
             </motion.div>
           ))}
         </div>

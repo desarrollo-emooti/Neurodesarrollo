@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
@@ -57,7 +58,9 @@ router.get('/',
     const take = parseInt(limit);
 
     // Build where clause
-    const where: any = {};
+    const where: any = {
+      active: true, // Only return active users by default
+    };
 
     if (search) {
       where.OR = [
@@ -231,7 +234,6 @@ router.post('/',
     body('province').optional().isString().withMessage('Province must be a string'),
     body('city').optional().isString().withMessage('City must be a string'),
     body('postalCode').optional().isString().withMessage('Postal code must be a string'),
-    body('centerId').optional().isString().withMessage('Center ID must be a string'),
     body('centerIds').optional().isArray().withMessage('Center IDs must be an array'),
     body('specialty').optional().isString().withMessage('Specialty must be a string'),
     body('licenseNumber').optional().isString().withMessage('License number must be a string'),
@@ -243,9 +245,12 @@ router.post('/',
   asyncHandler(async (req: any, res: Response) => {
     const userData = req.body;
 
-    // Check if email already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: userData.email },
+    // Check if email already exists (only check active users)
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email: userData.email,
+        active: true,
+      },
     });
 
     if (existingUser) {
@@ -255,10 +260,13 @@ router.post('/',
       });
     }
 
-    // Check if DNI already exists (if provided)
+    // Check if DNI already exists (if provided, only check active users)
     if (userData.dni) {
-      const existingDni = await prisma.user.findUnique({
-        where: { dni: userData.dni },
+      const existingDni = await prisma.user.findFirst({
+        where: {
+          dni: userData.dni,
+          active: true,
+        },
       });
 
       if (existingDni) {
@@ -269,13 +277,40 @@ router.post('/',
       }
     }
 
+    // Prepare data for creation - convert birthDate string to Date if provided
+    const dataToCreate: any = {
+      ...userData,
+      // Use the status from frontend, or default to ACTIVE if not provided
+      // Convert status to uppercase to match Prisma enum
+      status: userData.status ? (userData.status as string).toUpperCase() : 'ACTIVE',
+      createdBy: req.user.id,
+    };
+
+    // Convert birthDate string to Date object if provided
+    if (dataToCreate.birthDate && typeof dataToCreate.birthDate === 'string') {
+      dataToCreate.birthDate = new Date(dataToCreate.birthDate);
+    }
+
+    // Remove fields that don't exist in Prisma schema or cannot be set directly
+    delete dataToCreate.allowedTests;
+    delete dataToCreate.centerId; // Cannot set relation field directly, use center instead
+    delete dataToCreate.password; // User model doesn't have password field
+    delete dataToCreate.passwordSet; // User model doesn't have passwordSet field
+    delete dataToCreate.bankCccDocumentUrl; // Field doesn't exist in Prisma schema
+    delete dataToCreate.sepaMandateDocumentUrl; // Field doesn't exist in Prisma schema
+    delete dataToCreate.observations; // User model doesn't have observations field
+
+    // Convert empty strings to null for optional fields
+    if (dataToCreate.specialty === '') dataToCreate.specialty = null;
+    if (dataToCreate.licenseNumber === '') dataToCreate.licenseNumber = null;
+    if (dataToCreate.paymentMethod === '') dataToCreate.paymentMethod = null;
+    if (dataToCreate.bankIban === '') dataToCreate.bankIban = null;
+    if (dataToCreate.bankName === '') dataToCreate.bankName = null;
+
     // Create user
+
     const user = await prisma.user.create({
-      data: {
-        ...userData,
-        status: 'PENDING_INVITATION',
-        createdBy: req.user.id,
-      },
+      data: dataToCreate,
       select: {
         id: true,
         email: true,
@@ -284,7 +319,6 @@ router.post('/',
         dni: true,
         userType: true,
         status: true,
-        centerId: true,
         centerIds: true,
         specialty: true,
         licenseNumber: true,
@@ -334,7 +368,6 @@ router.put('/:id',
     body('province').optional().isString().withMessage('Province must be a string'),
     body('city').optional().isString().withMessage('City must be a string'),
     body('postalCode').optional().isString().withMessage('Postal code must be a string'),
-    body('centerId').optional().isString().withMessage('Center ID must be a string'),
     body('centerIds').optional().isArray().withMessage('Center IDs must be an array'),
     body('specialty').optional().isString().withMessage('Specialty must be a string'),
     body('licenseNumber').optional().isString().withMessage('License number must be a string'),
@@ -386,10 +419,13 @@ router.put('/:id',
       updateData = filteredData;
     }
 
-    // Check if DNI already exists (if being updated)
+    // Check if DNI already exists (if being updated, only check active users)
     if (updateData.dni && updateData.dni !== existingUser.dni) {
-      const existingDni = await prisma.user.findUnique({
-        where: { dni: updateData.dni },
+      const existingDni = await prisma.user.findFirst({
+        where: {
+          dni: updateData.dni,
+          active: true,
+        },
       });
 
       if (existingDni) {
@@ -399,6 +435,27 @@ router.put('/:id',
         });
       }
     }
+
+    // Convert birthDate string to Date object if provided
+    if (updateData.birthDate && typeof updateData.birthDate === 'string') {
+      updateData.birthDate = new Date(updateData.birthDate);
+    }
+
+    // Remove fields that don't exist in Prisma schema or cannot be set directly
+    delete updateData.allowedTests;
+    delete updateData.centerId; // Cannot set relation field directly
+    delete updateData.password; // User model doesn't have password field
+    delete updateData.passwordSet; // User model doesn't have passwordSet field
+    delete updateData.bankCccDocumentUrl; // Field doesn't exist in Prisma schema
+    delete updateData.sepaMandateDocumentUrl; // Field doesn't exist in Prisma schema
+    delete updateData.observations; // User model doesn't have observations field
+
+    // Convert empty strings to null for optional fields
+    if (updateData.specialty === '') updateData.specialty = null;
+    if (updateData.licenseNumber === '') updateData.licenseNumber = null;
+    if (updateData.paymentMethod === '') updateData.paymentMethod = null;
+    if (updateData.bankIban === '') updateData.bankIban = null;
+    if (updateData.bankName === '') updateData.bankName = null;
 
     // Update user
     const user = await prisma.user.update({
@@ -412,7 +469,6 @@ router.put('/:id',
         dni: true,
         userType: true,
         status: true,
-        centerId: true,
         centerIds: true,
         specialty: true,
         licenseNumber: true,
@@ -466,10 +522,21 @@ router.delete('/:id',
       throw validationErrorHandler('Cannot delete your own account');
     }
 
-    // Soft delete (set active to false)
+    // Soft delete (set active to false and modify email/dni to free up unique constraints)
+    const timestamp = Date.now();
+    const updateData: any = {
+      active: false,
+      email: `deleted_${timestamp}_${user.email}`,
+    };
+
+    // Also modify DNI if it exists
+    if (user.dni) {
+      updateData.dni = `deleted_${timestamp}_${user.dni}`;
+    }
+
     await prisma.user.update({
       where: { id },
-      data: { active: false },
+      data: updateData,
     });
 
     // Set audit data
@@ -594,3 +661,5 @@ router.post('/bulk',
 );
 
 export default router;
+
+

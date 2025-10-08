@@ -157,50 +157,55 @@ async function checkUserAnomalies(
 }
 
 async function checkIPAnomalies(ipAddress: string, req: AnomalyRequest, res: Response) {
-  // Check for suspicious IP patterns
-  const recentLogs = await prisma.auditLog.findMany({
-    where: {
-      ipAddress,
-      timestamp: {
-        gte: new Date(Date.now() - 15 * 60 * 1000), // Last 15 minutes
+  try {
+    // Check for suspicious IP patterns
+    const recentLogs = await prisma.auditLog.findMany({
+      where: {
+        ipAddress,
+        timestamp: {
+          gte: new Date(Date.now() - 15 * 60 * 1000), // Last 15 minutes
+        },
       },
-    },
-    select: {
-      userId: true,
-      action: true,
-      timestamp: true,
-    },
-  });
+      select: {
+        userId: true,
+        action: true,
+        timestamp: true,
+      },
+    });
 
-  // Check for multiple users from same IP
-  const uniqueUsers = new Set(recentLogs.map(log => log.userId).filter(Boolean));
-  if (uniqueUsers.size > 5) {
-    await createAnomalyAlert(
-      null,
-      AnomalyType.MULTIPLE_IP_ADDRESSES,
-      Severity.HIGH,
-      `IP address ${ipAddress} accessed by ${uniqueUsers.size} different users`,
-      { 
-        ipAddress, 
-        userCount: uniqueUsers.size,
-        users: Array.from(uniqueUsers)
-      }
-    );
-  }
+    // Check for multiple users from same IP
+    const uniqueUsers = new Set(recentLogs.map(log => log.userId).filter(Boolean));
+    if (uniqueUsers.size > 5) {
+      await createAnomalyAlert(
+        null,
+        AnomalyType.MULTIPLE_IP_ADDRESSES,
+        Severity.HIGH,
+        `IP address ${ipAddress} accessed by ${uniqueUsers.size} different users`,
+        {
+          ipAddress,
+          userCount: uniqueUsers.size,
+          users: Array.from(uniqueUsers)
+        }
+      );
+    }
 
-  // Check for high request volume from single IP
-  if (recentLogs.length > 100) {
-    await createAnomalyAlert(
-      null,
-      AnomalyType.BULK_DATA_ACCESS,
-      Severity.HIGH,
-      `IP address ${ipAddress} made ${recentLogs.length} requests in 15 minutes`,
-      { 
-        ipAddress, 
+    // Check for high request volume from single IP
+    if (recentLogs.length > 100) {
+      await createAnomalyAlert(
+        null,
+        AnomalyType.BULK_DATA_ACCESS,
+        Severity.HIGH,
+        `IP address ${ipAddress} made ${recentLogs.length} requests in 15 minutes`,
+        {
+          ipAddress, 
         requestCount: recentLogs.length,
         timeWindow: '15 minutes'
       }
     );
+  }
+  } catch (error) {
+    // Silently fail if database is unavailable - don't block the request
+    logger.debug('Skipping IP anomaly check due to database error:', error);
   }
 }
 

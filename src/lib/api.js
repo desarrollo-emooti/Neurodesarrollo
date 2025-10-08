@@ -107,10 +107,17 @@ export const apiClient = {
   users: {
     getAll: (params = {}) => api.get('/users', { params }),
     getById: (id) => api.get(`/users/${id}`),
+    getByIds: (ids, params = {}) => api.post('/users/by-ids', { ids, ...params }),
     create: (userData) => api.post('/users', userData),
     update: (id, userData) => api.put(`/users/${id}`, userData),
     delete: (id) => api.delete(`/users/${id}`),
-    bulk: (action, data) => api.post('/users/bulk', { action, ...data }),
+    bulkUpdate: (data) => api.post('/users/bulk-update', data),
+    bulkDelete: (userIds) => api.post('/users/bulk-delete', { user_ids: userIds }),
+    sendAuthorizations: (data) => api.post('/users/send-authorizations', data),
+    exportExcel: (data) => api.post('/users/export-excel', data, {
+      responseType: 'blob'
+    }),
+    getRelatedStudents: (userId) => api.get(`/users/${userId}/related-students`),
   },
   
   // Student methods

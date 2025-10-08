@@ -229,3 +229,16 @@ auto-generated/
 tmp/
 temp/
 
+# EMOOTI specific
+backend/_ul
+backend/fix-*.js
+backend/fix_errors.sh
+backend/migration.sql
+nul
+
+# Prisma
+backend/prisma/migrations/
+
+# Claude AI files (opcional)
+.claude/
+

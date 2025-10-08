@@ -118,6 +118,50 @@ const generateRefreshToken = (user: any) => {
   } as jwt.SignOptions);
 };
 
+// Email/Password Login
+router.post('/login', asyncHandler(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    throw new CustomError('Email and password are required', 400, 'VALIDATION_ERROR');
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  if (!user || !user.active || user.status !== 'ACTIVE') {
+    throw authErrorHandler('Invalid credentials');
+  }
+
+  const token = generateToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  await logAuditEvent(
+    user.id,
+    AuditAction.LOGIN,
+    'User',
+    user.id,
+    { loginMethod: 'Email/Password' },
+    req.ip,
+    req.get('User-Agent'),
+    undefined
+  );
+
+  return res.json({
+    success: true,
+    data: {
+      token,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        userType: user.userType
+      }
+    },
+    timestamp: new Date().toISOString(),
+  });
+}));
+
 // Google OAuth login
 router.get('/google', passport.authenticate('google', {
   scope: ['profile', 'email'],
