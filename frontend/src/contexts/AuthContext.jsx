@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken'));
 
   useEffect(() => {
     const initAuth = async () => {
@@ -22,23 +23,54 @@ export const AuthProvider = ({ children }) => {
         try {
           // Set the token in the API client
           apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          
+
           // Verify token and get user info
           const response = await apiClient.get('/auth/me');
           setUser(response.data.data);
         } catch (error) {
           console.error('Token verification failed:', error);
-          // Token is invalid, remove it
-          localStorage.removeItem('token');
-          setToken(null);
-          delete apiClient.defaults.headers.common['Authorization'];
+
+          // Try to refresh token if we have a refresh token
+          if (refreshToken) {
+            try {
+              const refreshResponse = await apiClient.post('/auth/refresh', {
+                refreshToken,
+              });
+
+              const { token: newToken, refreshToken: newRefreshToken } = refreshResponse.data.data;
+
+              localStorage.setItem('token', newToken);
+              localStorage.setItem('refreshToken', newRefreshToken);
+              setToken(newToken);
+              setRefreshToken(newRefreshToken);
+
+              apiClient.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+
+              // Try again to get user
+              const userResponse = await apiClient.get('/auth/me');
+              setUser(userResponse.data.data);
+            } catch (refreshError) {
+              console.error('Token refresh failed:', refreshError);
+              // Both tokens are invalid, clear everything
+              localStorage.removeItem('token');
+              localStorage.removeItem('refreshToken');
+              setToken(null);
+              setRefreshToken(null);
+              delete apiClient.defaults.headers.common['Authorization'];
+            }
+          } else {
+            // No refresh token, just clear the invalid token
+            localStorage.removeItem('token');
+            setToken(null);
+            delete apiClient.defaults.headers.common['Authorization'];
+          }
         }
       }
       setLoading(false);
     };
 
     initAuth();
-  }, [token]);
+  }, [token, refreshToken]);
 
   const login = async (email, password) => {
     try {
@@ -47,18 +79,20 @@ export const AuthProvider = ({ children }) => {
         password,
       });
 
-      const { token: newToken, user: userData } = response.data.data;
-      
-      // Store token
+      const { token: newToken, refreshToken: newRefreshToken, user: userData } = response.data.data;
+
+      // Store tokens
       localStorage.setItem('token', newToken);
+      localStorage.setItem('refreshToken', newRefreshToken);
       setToken(newToken);
-      
+      setRefreshToken(newRefreshToken);
+
       // Set token in API client
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      
+
       // Set user
       setUser(userData);
-      
+
       return { success: true };
     } catch (error) {
       console.error('Login failed:', error);
@@ -69,16 +103,50 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    // Remove token
-    localStorage.removeItem('token');
-    setToken(null);
-    
-    // Remove token from API client
-    delete apiClient.defaults.headers.common['Authorization'];
-    
-    // Clear user
-    setUser(null);
+  const handleOAuthCallback = async (accessToken, newRefreshToken) => {
+    try {
+      // Store tokens
+      localStorage.setItem('token', accessToken);
+      localStorage.setItem('refreshToken', newRefreshToken);
+      setToken(accessToken);
+      setRefreshToken(newRefreshToken);
+
+      // Set token in API client
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
+      // Get user info
+      const response = await apiClient.get('/auth/me');
+      setUser(response.data.data);
+
+      return { success: true };
+    } catch (error) {
+      console.error('OAuth callback failed:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error?.message || 'Error de autenticación OAuth',
+      };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      // Call logout endpoint
+      await apiClient.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      // Remove tokens
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      setToken(null);
+      setRefreshToken(null);
+
+      // Remove token from API client
+      delete apiClient.defaults.headers.common['Authorization'];
+
+      // Clear user
+      setUser(null);
+    }
   };
 
   const updateUser = (userData) => {
@@ -91,6 +159,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateUser,
+    handleOAuthCallback,
     isAuthenticated: !!user,
   };
 

@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
 import Centers from './pages/Centers';
@@ -37,7 +38,8 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
-              
+              <Route path="/auth/callback" element={<AuthCallback />} />
+
               {/* Protected Routes */}
               <Route path="/" element={
                 <ProtectedRoute>
