@@ -165,11 +165,12 @@ router.post('/login', asyncHandler(async (req: Request, res: Response) => {
 // Google OAuth login
 router.get('/google', passport.authenticate('google', {
   scope: ['profile', 'email'],
+  session: false,
 }));
 
 // Google OAuth callback
 router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login?error=auth_failed' }),
+  passport.authenticate('google', { failureRedirect: '/login?error=auth_failed', session: false }),
   asyncHandler(async (req: any, res: Response) => {
     try {
       const user = req.user;
