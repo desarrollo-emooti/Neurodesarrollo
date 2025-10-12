@@ -26,7 +26,7 @@ router.get('/dashboard', asyncHandler(async (req: any, res: Response) => {
       const pendingUsers = await prisma.user.count({
         where: {
           active: true,
-          status: 'PENDING'
+          status: 'PENDING_INVITATION'
         }
       });
 
