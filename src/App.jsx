@@ -15,6 +15,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 
 // Pages
 import Login from './pages/Login';
+import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Students from './pages/Students';
@@ -75,7 +76,9 @@ function App() {
           <AnimatePresence mode="wait">
             <Routes>
               {/* Public Routes */}
-              <Route 
+              <Route path="/auth/callback" element={<AuthCallback />} />
+
+              <Route
                 path="/login" 
                 element={
                   isAuthenticated ? (
