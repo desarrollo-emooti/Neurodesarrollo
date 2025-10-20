@@ -350,12 +350,15 @@ export default function TestResults() {
             </div>
 
             {/* Etapa Filter */}
-            <Select value={filterEtapa} onValueChange={setFilterEtapa}>
+            <Select
+              value={filterEtapa || "ALL"}
+              onValueChange={(value) => setFilterEtapa(value === "ALL" ? "" : value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todas las etapas" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value=" ">Todas las etapas</SelectItem>
+                <SelectItem value="ALL">Todas las etapas</SelectItem>
                 {ETAPAS.map((etapa) => (
                   <SelectItem key={etapa.value} value={etapa.value}>
                     {etapa.label}
@@ -365,12 +368,15 @@ export default function TestResults() {
             </Select>
 
             {/* Center Filter */}
-            <Select value={filterCenter} onValueChange={setFilterCenter}>
+            <Select
+              value={filterCenter || "ALL"}
+              onValueChange={(value) => setFilterCenter(value === "ALL" ? "" : value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todos los centros" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value=" ">Todos los centros</SelectItem>
+                <SelectItem value="ALL">Todos los centros</SelectItem>
                 {centers.map((center) => (
                   <SelectItem key={center.id} value={center.id}>
                     {center.name}
@@ -380,24 +386,30 @@ export default function TestResults() {
             </Select>
 
             {/* Validated Filter */}
-            <Select value={filterValidated} onValueChange={setFilterValidated}>
+            <Select
+              value={filterValidated || "ALL"}
+              onValueChange={(value) => setFilterValidated(value === "ALL" ? "" : value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Estado de validación" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value=" ">Todos</SelectItem>
+                <SelectItem value="ALL">Todos</SelectItem>
                 <SelectItem value="true">Validados</SelectItem>
                 <SelectItem value="false">No validados</SelectItem>
               </SelectContent>
             </Select>
 
             {/* Interpretation Filter */}
-            <Select value={filterInterpretation} onValueChange={setFilterInterpretation}>
+            <Select
+              value={filterInterpretation || "ALL"}
+              onValueChange={(value) => setFilterInterpretation(value === "ALL" ? "" : value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Interpretación" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value=" ">Todas</SelectItem>
+                <SelectItem value="ALL">Todas</SelectItem>
                 {Object.entries(INTERPRETATION_OPTIONS).map(([key, { label }]) => (
                   <SelectItem key={key} value={key}>
                     {label}
@@ -407,12 +419,15 @@ export default function TestResults() {
             </Select>
 
             {/* Import Source Filter */}
-            <Select value={filterImportSource} onValueChange={setFilterImportSource}>
+            <Select
+              value={filterImportSource || "ALL"}
+              onValueChange={(value) => setFilterImportSource(value === "ALL" ? "" : value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Origen de datos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value=" ">Todos</SelectItem>
+                <SelectItem value="ALL">Todos</SelectItem>
                 {Object.entries(IMPORT_SOURCE_OPTIONS).map(([key, { label }]) => (
                   <SelectItem key={key} value={key}>
                     {label}

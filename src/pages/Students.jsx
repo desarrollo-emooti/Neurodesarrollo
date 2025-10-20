@@ -325,14 +325,14 @@ export default function Students() {
               Etapa
             </label>
             <Select
-              value={filters.etapa}
-              onValueChange={(value) => setFilters({ ...filters, etapa: value })}
+              value={filters.etapa || "ALL"}
+              onValueChange={(value) => setFilters({ ...filters, etapa: value === "ALL" ? "" : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todas" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas las etapas</SelectItem>
+                <SelectItem value="ALL">Todas las etapas</SelectItem>
                 <SelectItem value="EDUCACION_INFANTIL">Educación Infantil</SelectItem>
                 <SelectItem value="EDUCACION_PRIMARIA">Educación Primaria</SelectItem>
                 <SelectItem value="ESO">ESO</SelectItem>
@@ -347,14 +347,14 @@ export default function Students() {
               Centro
             </label>
             <Select
-              value={filters.centerId}
-              onValueChange={(value) => setFilters({ ...filters, centerId: value })}
+              value={filters.centerId || "ALL"}
+              onValueChange={(value) => setFilters({ ...filters, centerId: value === "ALL" ? "" : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los centros</SelectItem>
+                <SelectItem value="ALL">Todos los centros</SelectItem>
                 {centers.map(center => (
                   <SelectItem key={center.id} value={center.id}>
                     {center.name}
@@ -369,14 +369,14 @@ export default function Students() {
               Consentimiento
             </label>
             <Select
-              value={filters.consentGiven}
-              onValueChange={(value) => setFilters({ ...filters, consentGiven: value })}
+              value={filters.consentGiven || "ALL"}
+              onValueChange={(value) => setFilters({ ...filters, consentGiven: value === "ALL" ? "" : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="ALL">Todos</SelectItem>
                 <SelectItem value="SI">Sí</SelectItem>
                 <SelectItem value="NO">No</SelectItem>
                 <SelectItem value="PENDIENTE">Pendiente</SelectItem>
@@ -390,14 +390,14 @@ export default function Students() {
               Estado de Pago
             </label>
             <Select
-              value={filters.paymentStatus}
-              onValueChange={(value) => setFilters({ ...filters, paymentStatus: value })}
+              value={filters.paymentStatus || "ALL"}
+              onValueChange={(value) => setFilters({ ...filters, paymentStatus: value === "ALL" ? "" : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="ALL">Todos</SelectItem>
                 <SelectItem value="PAGADO">Pagado</SelectItem>
                 <SelectItem value="PENDIENTE">Pendiente</SelectItem>
                 <SelectItem value="NA">N/A</SelectItem>
