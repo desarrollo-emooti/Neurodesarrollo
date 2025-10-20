@@ -210,9 +210,9 @@ const Login = () => {
               </h4>
               <div className="text-xs text-slate-600 space-y-1">
                 <p><strong>Admin:</strong> admin@emooti.com / admin123</p>
-                <p><strong>Clínica:</strong> clinica@emooti.com / admin123</p>
-                <p><strong>Orientador:</strong> orientador@centroprueba.com / admin123</p>
-                <p><strong>Familia:</strong> familia@ejemplo.com / admin123</p>
+                <p><strong>Clínica:</strong> clinica@emooti.com / clinica123</p>
+                <p><strong>Orientador:</strong> orientador@centroprueba.com / orientador123</p>
+                <p><strong>Familia:</strong> familia@ejemplo.com / familia123</p>
               </div>
             </div>
           </CardContent>
