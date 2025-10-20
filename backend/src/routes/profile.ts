@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
-import { asyncHandler, notFoundErrorHandler, validationErrorHandler } from '../middleware/errorHandler';
+import { asyncHandler, notFoundErrorHandler, validationErrorHandler, authErrorHandler } from '../middleware/errorHandler';
 import { verifyToken } from './auth';
 import { setAuditData } from '../middleware/auditLogger';
 import { AuditAction } from '@prisma/client';
@@ -219,22 +220,35 @@ router.put('/password',
       throw notFoundErrorHandler('User');
     }
 
-    // TODO: Implement password validation and hashing
-    // This would involve:
-    // 1. Verify current password
-    // 2. Hash new password
-    // 3. Update user password
+    // Verify current password
+    if (user.password && user.passwordSet) {
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isPasswordValid) {
+        throw authErrorHandler('Current password is incorrect');
+      }
+    }
 
-    // For now, we'll just log the action
-    logger.info('Password change requested:', {
-      userId: user.id,
-      fullName: user.fullName,
-      email: user.email,
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update user password
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+        passwordSet: true,
+      },
     });
 
     // Set audit data
     setAuditData(req, AuditAction.DATA_MODIFICATION, 'User', userId, {
       action: 'CHANGE_PASSWORD',
+    });
+
+    logger.info('Password changed successfully:', {
+      userId: user.id,
+      fullName: user.fullName,
+      email: user.email,
     });
 
     return res.json({

@@ -14,6 +14,8 @@ async function main() {
     update: {},
     create: {
       email: 'admin@emooti.com',
+      password: hashedPassword,
+      passwordSet: true,
       fullName: 'Administrador EMOOTI',
       userType: 'ADMINISTRADOR',
       status: 'ACTIVE',
@@ -43,7 +45,7 @@ async function main() {
       phone: '+34 900 000 000',
       email: 'info@centroprueba.com',
       responsable: 'María García López',
-      type: 'publico',
+      type: 'PUBLICO',
       totalStudents: 500,
       address: 'Avenida de la Educación, 456',
       country: 'España',
@@ -58,11 +60,14 @@ async function main() {
   console.log('✅ Sample center created:', sampleCenter.name);
 
   // Create sample orientador user
+  const orientadorPassword = await bcrypt.hash('orientador123', 12);
   const orientadorUser = await prisma.user.upsert({
     where: { email: 'orientador@centroprueba.com' },
     update: {},
     create: {
       email: 'orientador@centroprueba.com',
+      password: orientadorPassword,
+      passwordSet: true,
       fullName: 'Juan Pérez Martínez',
       userType: 'ORIENTADOR',
       status: 'ACTIVE',
@@ -86,11 +91,14 @@ async function main() {
   console.log('✅ Orientador user created:', orientadorUser.email);
 
   // Create sample clinica user
+  const clinicaPassword = await bcrypt.hash('clinica123', 12);
   const clinicaUser = await prisma.user.upsert({
     where: { email: 'clinica@emooti.com' },
     update: {},
     create: {
       email: 'clinica@emooti.com',
+      password: clinicaPassword,
+      passwordSet: true,
       fullName: 'Dra. Ana López Sánchez',
       userType: 'CLINICA',
       status: 'ACTIVE',
@@ -114,11 +122,14 @@ async function main() {
   console.log('✅ Clínica user created:', clinicaUser.email);
 
   // Create sample family user
+  const familyPassword = await bcrypt.hash('familia123', 12);
   const familyUser = await prisma.user.upsert({
     where: { email: 'familia@ejemplo.com' },
     update: {},
     create: {
       email: 'familia@ejemplo.com',
+      password: familyPassword,
+      passwordSet: true,
       fullName: 'Carlos García Ruiz',
       userType: 'FAMILIA',
       status: 'ACTIVE',
@@ -149,7 +160,7 @@ async function main() {
       birthDate: new Date('2015-09-15'),
       gender: 'F',
       nationality: 'Española',
-      etapa: 'Educación Primaria',
+      etapa: 'EDUCACION_PRIMARIA',
       course: '3º Primaria',
       classGroup: '3ºA',
       centerId: sampleCenter.id,
@@ -158,9 +169,9 @@ async function main() {
       specialEducationalNeeds: 'Ninguna',
       medicalObservations: 'Sin observaciones médicas',
       generalObservations: 'Estudiante aplicada y responsable',
-      consentGiven: 'Sí',
+      consentGiven: 'SI',
       paymentType: 'B2B2C',
-      paymentStatus: 'Pagado',
+      paymentStatus: 'PAGADO',
       active: true,
     },
   });
@@ -189,9 +200,9 @@ async function main() {
       testDate: new Date('2024-02-15T10:00:00Z'),
       assignedBy: orientadorUser.id,
       assignedDate: new Date(),
-      testStatus: 'Pendiente',
-      consentGiven: 'Sí',
-      priority: 'media',
+      testStatus: 'PENDIENTE',
+      consentGiven: 'SI',
+      priority: 'MEDIA',
       notes: 'Evaluación inicial para determinar necesidades educativas',
       active: true,
     },
@@ -204,7 +215,7 @@ async function main() {
     data: {
       title: 'Evaluación Psicopedagógica - María García',
       description: 'Evaluación inicial de María García Ruiz',
-      eventType: 'evaluacion',
+      eventType: 'EVALUACION',
       centerId: sampleCenter.id,
       startDate: new Date('2024-02-15T10:00:00Z'),
       endDate: new Date('2024-02-15T12:00:00Z'),
@@ -217,11 +228,11 @@ async function main() {
           examinerId: clinicaUser.id,
         },
       ],
-      approvalStatus: 'aprobado',
+      approvalStatus: 'APPROVED',
       approvedBy: orientadorUser.id,
       approvalDate: new Date(),
       createdBy: orientadorUser.id,
-      priority: 'media',
+      priority: 'MEDIA',
       recurring: false,
       active: true,
     },
@@ -234,10 +245,10 @@ async function main() {
     data: {
       code: 'INV001',
       name: 'Tablet iPad Pro 12.9"',
-      category: 'Informatica',
+      category: 'INFORMATICA',
       itemType: 'Tablet',
       inventoryNumber: 'TAB001',
-      status: 'Libre',
+      status: 'LIBRE',
       location: 'Aula de Evaluación 1',
       purchaseDate: new Date('2023-01-15'),
       serialNumber: 'IPAD123456789',
@@ -248,7 +259,7 @@ async function main() {
       supplierWebsite: 'https://www.apple.com/es/',
       supplierEmail: 'ventas@apple.com',
       supplierPhone: '+34 900 123 456',
-      testType: 'link',
+      testType: 'LINK',
       requiresStaff: true,
       requiresTablet: true,
     },
@@ -257,18 +268,19 @@ async function main() {
   console.log('✅ Sample inventory item created');
 
   // Create sample device
+  const inventoryItem = await prisma.inventoryItem.findFirst({ where: { code: 'INV001' } });
   await prisma.device.create({
     data: {
       name: 'iPad Pro 12.9" - Aula 1',
-      type: 'ipad',
+      type: 'IPAD',
       serial: 'IPAD123456789',
       model: 'iPad Pro 12.9" (6th generation)',
       centerId: sampleCenter.id,
       location: 'Aula de Evaluación 1',
-      status: 'activo',
-      usageStatus: 'libre',
+      status: 'ACTIVO',
+      usageStatus: 'LIBRE',
       lastStatusUpdate: new Date(),
-      inventoryItemId: (await prisma.inventoryItem.findFirst({ where: { code: 'INV001' } }))?.id,
+      inventoryItemId: inventoryItem?.id || null,
     },
   });
 
@@ -358,8 +370,13 @@ async function main() {
   console.log('- 1 Company configuration');
   console.log('- 1 Value configuration');
   console.log('');
-  console.log('🔑 Default passwords: admin123 (for all users)');
-  console.log('⚠️  Please change passwords in production!');
+  console.log('🔑 Default credentials:');
+  console.log('  - admin@emooti.com / admin123');
+  console.log('  - orientador@centroprueba.com / orientador123');
+  console.log('  - clinica@emooti.com / clinica123');
+  console.log('  - familia@ejemplo.com / familia123');
+  console.log('');
+  console.log('⚠️  Please change these passwords in production!');
 }
 
 main()

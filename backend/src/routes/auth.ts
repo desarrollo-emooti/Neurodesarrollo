@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { asyncHandler, authErrorHandler, CustomError } from '../middleware/errorHandler';
@@ -132,6 +133,25 @@ router.post('/login', asyncHandler(async (req: Request, res: Response) => {
     throw authErrorHandler('Invalid credentials');
   }
 
+  // Verify password
+  if (!user.password || !user.passwordSet) {
+    logger.warn('Login attempt for user without password:', {
+      userId: user.id,
+      email: user.email,
+    });
+    throw authErrorHandler('Invalid credentials');
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    logger.warn('Failed login attempt - invalid password:', {
+      userId: user.id,
+      email: user.email,
+      ip: req.ip,
+    });
+    throw authErrorHandler('Invalid credentials');
+  }
+
   const token = generateToken(user);
   const refreshToken = generateRefreshToken(user);
 
@@ -145,6 +165,12 @@ router.post('/login', asyncHandler(async (req: Request, res: Response) => {
     req.get('User-Agent'),
     undefined
   );
+
+  logger.info('Successful login:', {
+    userId: user.id,
+    email: user.email,
+    userType: user.userType,
+  });
 
   return res.json({
     success: true,
