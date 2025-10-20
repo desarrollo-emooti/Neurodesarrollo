@@ -34,6 +34,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+// Center Components
+import CreateCenterModal from '@/components/centers/CreateCenterModal';
+import CenterEditForm from '@/components/centers/CenterEditForm';
+
 // API
 import { apiClient } from '@/lib/api';
 
@@ -520,32 +524,19 @@ export default function Centers() {
         </DialogContent>
       </Dialog>
 
-      {/* TODO: Create and Edit Modals */}
-      {showCreateModal && (
-        <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Crear nuevo centro</DialogTitle>
-              <DialogDescription>
-                Funcionalidad en desarrollo
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-      )}
+      {/* Create and Edit Modals */}
+      <CreateCenterModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={loadCenters}
+      />
 
-      {showEditModal && (
-        <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Editar centro</DialogTitle>
-              <DialogDescription>
-                Funcionalidad en desarrollo
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-      )}
+      <CenterEditForm
+        open={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={loadCenters}
+        center={editingCenter}
+      />
     </div>
   );
 }
