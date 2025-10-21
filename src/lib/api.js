@@ -182,6 +182,8 @@ export const apiClient = {
     create: (deviceData) => api.post('/devices', deviceData),
     update: (id, deviceData) => api.put(`/devices/${id}`, deviceData),
     delete: (id) => api.delete(`/devices/${id}`),
+    getReservations: (id, params = {}) => api.get(`/devices/${id}/reservations`, { params }),
+    createReservation: (id, reservationData) => api.post(`/devices/${id}/reservations`, reservationData),
   },
   
   // Inventory methods
