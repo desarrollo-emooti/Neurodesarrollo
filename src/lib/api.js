@@ -202,6 +202,8 @@ export const apiClient = {
     create: (subscriptionData) => api.post('/subscriptions', subscriptionData),
     update: (id, subscriptionData) => api.put(`/subscriptions/${id}`, subscriptionData),
     delete: (id) => api.delete(`/subscriptions/${id}`),
+    getBillings: (id) => api.get(`/subscriptions/${id}`),
+    generateBilling: (id, billingData) => api.post(`/subscriptions/${id}/generate-billing`, billingData),
   },
   
   // Invoice methods
