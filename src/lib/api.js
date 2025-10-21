@@ -222,9 +222,16 @@ export const apiClient = {
   
   // Security methods
   security: {
+    getDashboard: () => api.get('/security/dashboard'),
     getAuditLogs: (params = {}) => api.get('/security/audit-logs', { params }),
     getAnomalyAlerts: (params = {}) => api.get('/security/anomaly-alerts', { params }),
+    updateAnomalyAlert: (id, data) => api.put(`/security/anomaly-alerts/${id}`, data),
     getRetentionPolicies: (params = {}) => api.get('/security/retention-policies', { params }),
+    createRetentionPolicy: (data) => api.post('/security/retention-policies', data),
+    updateRetentionPolicy: (id, data) => api.put(`/security/retention-policies/${id}`, data),
+    deleteRetentionPolicy: (id) => api.delete(`/security/retention-policies/${id}`),
+    getAnonymizationLogs: (params = {}) => api.get('/security/anonymization-logs', { params }),
+    createAnonymizationLog: (data) => api.post('/security/anonymization-logs', data),
   },
   
   // Configuration methods
