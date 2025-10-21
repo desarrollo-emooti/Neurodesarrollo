@@ -15,6 +15,7 @@ import {
   AlertCircle,
   FileText,
   User,
+  List,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -34,6 +35,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import CreateAgendaEventModal from '@/components/agenda/CreateAgendaEventModal';
 import AgendaEventEditForm from '@/components/agenda/AgendaEventEditForm';
+import CalendarView from '@/components/agenda/CalendarView';
 
 // API & Store
 import { apiClient } from '@/lib/api';
@@ -70,6 +72,7 @@ export default function Agenda() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'calendar'
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -239,15 +242,40 @@ export default function Agenda() {
           </p>
         </div>
 
-        {canCreate && (
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="emooti-gradient text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nuevo Evento
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {/* View Toggle */}
+          <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              className={viewMode === 'table' ? 'emooti-gradient text-white' : ''}
+            >
+              <List className="w-4 h-4 mr-2" />
+              Lista
+            </Button>
+            <Button
+              variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('calendar')}
+              className={viewMode === 'calendar' ? 'emooti-gradient text-white' : ''}
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              Calendario
+            </Button>
+          </div>
+
+          {/* Create Button */}
+          {canCreate && (
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="emooti-gradient text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo Evento
+            </Button>
+          )}
+        </div>
       </motion.div>
 
       {/* Stats Cards */}
@@ -428,153 +456,163 @@ export default function Agenda() {
         </motion.div>
       )}
 
-      {/* Events Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  {canDelete && (
-                    <th className="p-4 text-left">
-                      <Checkbox
-                        checked={selectedEvents.length === events.length && events.length > 0}
-                        onCheckedChange={handleSelectAll}
-                      />
-                    </th>
-                  )}
-                  <th className="p-4 text-left text-sm font-semibold text-slate-700">Título</th>
-                  <th className="p-4 text-left text-sm font-semibold text-slate-700">Tipo</th>
-                  <th className="p-4 text-left text-sm font-semibold text-slate-700">Centro</th>
-                  <th className="p-4 text-left text-sm font-semibold text-slate-700">Fecha/Hora</th>
-                  <th className="p-4 text-left text-sm font-semibold text-slate-700">Ubicación</th>
-                  <th className="p-4 text-left text-sm font-semibold text-slate-700">Estado</th>
-                  <th className="p-4 text-left text-sm font-semibold text-slate-700">Prioridad</th>
-                  <th className="p-4 text-right text-sm font-semibold text-slate-700">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {events.length === 0 ? (
+      {/* Table or Calendar View */}
+      {viewMode === 'table' ? (
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <td colSpan={canDelete ? 9 : 8} className="p-8 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-500">
-                        <Calendar className="w-12 h-12 mb-3 text-slate-300" />
-                        <p className="text-lg font-medium">No hay eventos disponibles</p>
-                        <p className="text-sm">
-                          {searchTerm || filterEventType || filterCenter || filterApprovalStatus
-                            ? 'Prueba con otros filtros'
-                            : 'Crea el primer evento para comenzar'}
-                        </p>
-                      </div>
-                    </td>
+                    {canDelete && (
+                      <th className="p-4 text-left">
+                        <Checkbox
+                          checked={selectedEvents.length === events.length && events.length > 0}
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </th>
+                    )}
+                    <th className="p-4 text-left text-sm font-semibold text-slate-700">Título</th>
+                    <th className="p-4 text-left text-sm font-semibold text-slate-700">Tipo</th>
+                    <th className="p-4 text-left text-sm font-semibold text-slate-700">Centro</th>
+                    <th className="p-4 text-left text-sm font-semibold text-slate-700">Fecha/Hora</th>
+                    <th className="p-4 text-left text-sm font-semibold text-slate-700">Ubicación</th>
+                    <th className="p-4 text-left text-sm font-semibold text-slate-700">Estado</th>
+                    <th className="p-4 text-left text-sm font-semibold text-slate-700">Prioridad</th>
+                    <th className="p-4 text-right text-sm font-semibold text-slate-700">Acciones</th>
                   </tr>
-                ) : (
-                  events.map((event) => (
-                    <motion.tr
-                      key={event.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="hover:bg-slate-50 transition-colors"
-                    >
-                      {canDelete && (
-                        <td className="p-4">
-                          <Checkbox
-                            checked={selectedEvents.includes(event.id)}
-                            onCheckedChange={(checked) => handleSelectEvent(event.id, checked)}
-                          />
-                        </td>
-                      )}
-                      <td className="p-4">
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">{event.title}</p>
-                          {event.description && (
-                            <p className="text-xs text-slate-500 line-clamp-1">{event.description}</p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <Badge className={EVENT_TYPES[event.eventType]?.color || 'bg-slate-100'}>
-                          {EVENT_TYPES[event.eventType]?.label || event.eventType}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <div>
-                          <p className="text-sm text-slate-900">{event.center?.name}</p>
-                          <p className="text-xs text-slate-500">{event.center?.code}</p>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div>
-                          <p className="text-sm text-slate-900">{formatDate(event.startDate)}</p>
-                          <p className="text-xs text-slate-500">
-                            {formatTime(event.startDate)} - {formatTime(event.endDate)}
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {events.length === 0 ? (
+                    <tr>
+                      <td colSpan={canDelete ? 9 : 8} className="p-8 text-center">
+                        <div className="flex flex-col items-center justify-center text-slate-500">
+                          <Calendar className="w-12 h-12 mb-3 text-slate-300" />
+                          <p className="text-lg font-medium">No hay eventos disponibles</p>
+                          <p className="text-sm">
+                            {searchTerm || filterEventType || filterCenter || filterApprovalStatus
+                              ? 'Prueba con otros filtros'
+                              : 'Crea el primer evento para comenzar'}
                           </p>
                         </div>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-1 text-sm text-slate-600">
-                          <MapPin className="w-3 h-3" />
-                          <span className="line-clamp-1">{event.location || '-'}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <Badge className={APPROVAL_STATUS[event.approvalStatus]?.color || 'bg-slate-100'}>
-                          {APPROVAL_STATUS[event.approvalStatus]?.label || event.approvalStatus}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <Badge className={PRIORITY[event.priority]?.color || 'bg-slate-100'}>
-                          {PRIORITY[event.priority]?.label || event.priority}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center justify-end gap-2">
-                          {canEdit && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(event)}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
-              <p className="text-sm text-slate-600">
-                Mostrando {events.length} de {totalEvents} eventos
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  Siguiente
-                </Button>
-              </div>
+                    </tr>
+                  ) : (
+                    events.map((event) => (
+                      <motion.tr
+                        key={event.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="hover:bg-slate-50 transition-colors"
+                      >
+                        {canDelete && (
+                          <td className="p-4">
+                            <Checkbox
+                              checked={selectedEvents.includes(event.id)}
+                              onCheckedChange={(checked) => handleSelectEvent(event.id, checked)}
+                            />
+                          </td>
+                        )}
+                        <td className="p-4">
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">{event.title}</p>
+                            {event.description && (
+                              <p className="text-xs text-slate-500 line-clamp-1">{event.description}</p>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <Badge className={EVENT_TYPES[event.eventType]?.color || 'bg-slate-100'}>
+                            {EVENT_TYPES[event.eventType]?.label || event.eventType}
+                          </Badge>
+                        </td>
+                        <td className="p-4">
+                          <div>
+                            <p className="text-sm text-slate-900">{event.center?.name}</p>
+                            <p className="text-xs text-slate-500">{event.center?.code}</p>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div>
+                            <p className="text-sm text-slate-900">{formatDate(event.startDate)}</p>
+                            <p className="text-xs text-slate-500">
+                              {formatTime(event.startDate)} - {formatTime(event.endDate)}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-1 text-sm text-slate-600">
+                            <MapPin className="w-3 h-3" />
+                            <span className="line-clamp-1">{event.location || '-'}</span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <Badge className={APPROVAL_STATUS[event.approvalStatus]?.color || 'bg-slate-100'}>
+                            {APPROVAL_STATUS[event.approvalStatus]?.label || event.approvalStatus}
+                          </Badge>
+                        </td>
+                        <td className="p-4">
+                          <Badge className={PRIORITY[event.priority]?.color || 'bg-slate-100'}>
+                            {PRIORITY[event.priority]?.label || event.priority}
+                          </Badge>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center justify-end gap-2">
+                            {canEdit && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(event)}
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
+                <p className="text-sm text-slate-600">
+                  Mostrando {events.length} de {totalEvents} eventos
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Siguiente
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <CalendarView
+          events={events}
+          onSelectEvent={handleEdit}
+          onSelectSlot={(slotInfo) => {
+            setShowCreateModal(true);
+          }}
+        />
+      )}
 
       {/* Modals */}
       {showCreateModal && (
