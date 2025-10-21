@@ -213,6 +213,11 @@ export const apiClient = {
     create: (invoiceData) => api.post('/invoices', invoiceData),
     update: (id, invoiceData) => api.put(`/invoices/${id}`, invoiceData),
     delete: (id) => api.delete(`/invoices/${id}`),
+    generatePdf: (id) => api.post(`/invoices/${id}/generate-pdf`),
+    sendEmail: (id) => api.post(`/invoices/${id}/send-email`),
+    markAsPaid: (id, data) => api.post(`/invoices/${id}/mark-as-paid`, data),
+    createCreditNote: (id, data) => api.post(`/invoices/${id}/credit-note`, data),
+    getStatistics: () => api.get('/invoices/statistics/overview'),
   },
   
   // Security methods
