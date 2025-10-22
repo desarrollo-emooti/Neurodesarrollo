@@ -236,10 +236,20 @@ export const apiClient = {
   
   // Configuration methods
   configuration: {
-    getImportTemplates: (params = {}) => api.get('/configuration/import-templates', { params }),
     getValueConfigurations: (params = {}) => api.get('/configuration/value-configurations', { params }),
+    createValueConfiguration: (data) => api.post('/configuration/value-configurations', data),
+    updateValueConfiguration: (id, data) => api.put(`/configuration/value-configurations/${id}`, data),
+    deleteValueConfiguration: (id) => api.delete(`/configuration/value-configurations/${id}`),
     getCompanyConfiguration: () => api.get('/configuration/company'),
     updateCompanyConfiguration: (data) => api.put('/configuration/company', data),
+    getImportTemplates: (params = {}) => api.get('/configuration/import-templates', { params }),
+    createImportTemplate: (data) => api.post('/configuration/import-templates', data),
+    updateImportTemplate: (id, data) => api.put(`/configuration/import-templates/${id}`, data),
+    deleteImportTemplate: (id) => api.delete(`/configuration/import-templates/${id}`),
+    getBackupConfigurations: (params = {}) => api.get('/configuration/backup-configurations', { params }),
+    createBackupConfiguration: (data) => api.post('/configuration/backup-configurations', data),
+    updateBackupConfiguration: (id, data) => api.put(`/configuration/backup-configurations/${id}`, data),
+    deleteBackupConfiguration: (id) => api.delete(`/configuration/backup-configurations/${id}`),
   },
   
   // Authorization methods
