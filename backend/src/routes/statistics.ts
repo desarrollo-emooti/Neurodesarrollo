@@ -29,24 +29,62 @@ router.get('/dashboard', asyncHandler(async (req: any, res: Response) => {
           status: 'PENDING_INVITATION'
         }
       });
+      const completedTests = await prisma.testAssignment.count({
+        where: { status: 'COMPLETED' }
+      });
+      const pendingTests = await prisma.testAssignment.count({
+        where: { status: { in: ['PENDING', 'IN_PROGRESS'] } }
+      });
 
       stats = {
         totalUsers,
         totalStudents,
         activeCenters,
-        completedTests: 0, // TODO: Implement when Test model is ready
-        pendingTests: 0,
+        completedTests,
+        pendingTests,
         pendingUsers,
       };
     }
 
     // Clinical staff stats
     else if (userType === 'CLINICA') {
+      // Get students assigned to this clinician through test assignments
+      const assignedTestAssignments = await prisma.testAssignment.findMany({
+        where: { assignedTo: user.id },
+        select: { studentId: true },
+        distinct: ['studentId'],
+      });
+      const assignedStudents = assignedTestAssignments.length;
+
+      const pendingEvaluations = await prisma.testAssignment.count({
+        where: {
+          assignedTo: user.id,
+          status: { in: ['PENDING', 'IN_PROGRESS'] }
+        }
+      });
+
+      const completedEvaluations = await prisma.testAssignment.count({
+        where: {
+          assignedTo: user.id,
+          status: 'COMPLETED'
+        }
+      });
+
+      // Count test results without interpretation (pending reports)
+      const pendingReports = await prisma.testResult.count({
+        where: {
+          testAssignment: {
+            assignedTo: user.id
+          },
+          interpretation: null
+        }
+      });
+
       stats = {
-        assignedStudents: 0, // TODO: Implement when assignments are ready
-        pendingEvaluations: 0,
-        pendingReports: 0,
-        completedEvaluations: 0,
+        assignedStudents,
+        pendingEvaluations,
+        pendingReports,
+        completedEvaluations,
       };
     }
 
@@ -57,38 +95,93 @@ router.get('/dashboard', asyncHandler(async (req: any, res: Response) => {
         ? await prisma.student.count({ where: { centerId, active: true } })
         : 0;
 
+      // Count future agenda events for this orientador
+      const now = new Date();
+      const scheduledEvaluations = await prisma.agendaEvent.count({
+        where: {
+          OR: [
+            { createdBy: user.id },
+            { studentId: { in: await prisma.student.findMany({
+              where: { centerId },
+              select: { id: true }
+            }).then(students => students.map(s => s.id)) } }
+          ],
+          startDateTime: { gte: now },
+          eventType: 'Evaluación'
+        }
+      });
+
+      // Count pending events (events in the future)
+      const pendingEvents = await prisma.agendaEvent.count({
+        where: {
+          OR: [
+            { createdBy: user.id },
+            { studentId: { in: await prisma.student.findMany({
+              where: { centerId },
+              select: { id: true }
+            }).then(students => students.map(s => s.id)) } }
+          ],
+          startDateTime: { gte: now }
+        }
+      });
+
+      // Count available reports (test results with interpretation for center students)
+      const availableReports = await prisma.testResult.count({
+        where: {
+          testAssignment: {
+            student: {
+              centerId
+            }
+          },
+          interpretation: { not: null }
+        }
+      });
+
       stats = {
         centerStudents,
-        scheduledEvaluations: 0, // TODO: Implement when calendar is ready
-        availableReports: 0,
-        pendingEvents: 0,
+        scheduledEvaluations,
+        availableReports,
+        pendingEvents,
       };
     }
 
     // Examiner stats
     else if (userType === 'EXAMINADOR') {
+      const assignedTests = await prisma.testAssignment.count({
+        where: { examinerId: user.id }
+      });
+
+      const completedTests = await prisma.testAssignment.count({
+        where: {
+          examinerId: user.id,
+          status: 'COMPLETED'
+        }
+      });
+
+      const pendingTests = await prisma.testAssignment.count({
+        where: {
+          examinerId: user.id,
+          status: { in: ['PENDING', 'IN_PROGRESS'] }
+        }
+      });
+
       stats = {
-        assignedTests: 0, // TODO: Implement when Test model is ready
-        completedTests: 0,
-        pendingTests: 0,
+        assignedTests,
+        completedTests,
+        pendingTests,
       };
     }
 
     // Family stats
     else if (userType === 'FAMILIA') {
-      // Find students linked to this family user
-      const childrenCount = await prisma.student.count({
-        where: {
-          // TODO: Add relationship when family-student link is implemented
-          active: true,
-        }
-      });
+      // TODO: Implement family-student relationship in database schema
+      // For now, return placeholder values as the relationship doesn't exist yet
 
       stats = {
-        childrenCount: 0, // TODO: Implement proper family-student relationship
-        recentEvaluations: 0,
-        availableReports: 0,
-        upcomingEvaluations: 0,
+        childrenCount: 0, // Requires family-student link in schema
+        recentEvaluations: 0, // Requires family-student link
+        availableReports: 0, // Requires family-student link
+        upcomingEvaluations: 0, // Requires family-student link
       };
     }
 
