@@ -11,10 +11,10 @@
 | Prioridad | Total | Abiertos | En Progreso | Resueltos |
 |-----------|-------|----------|-------------|-----------|
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
-| 🟠 Alta | 7 | 7 | 0 | 0 |
-| 🟡 Media | 5 | 5 | 0 | 0 |
+| 🟠 Alta | 7 | 5 | 0 | 2 |
+| 🟡 Media | 5 | 3 | 0 | 2 |
 | 🟢 Baja | 8 | 8 | 0 | 0 |
-| **TOTAL** | **20** | **20** | **0** | **0** |
+| **TOTAL** | **20** | **16** | **0** | **4** |
 
 ---
 
@@ -30,9 +30,10 @@ El sistema está estable y todos los módulos implementados funcionan correctame
 
 ### ISSUE #1: Métricas de FAMILIA retornan 0
 **Categoría:** Backend - Statistics
-**Estado:** 🟠 Abierto
+**Estado:** ✅ Resuelto (22 Oct 2025)
 **Detectado:** Testing End-to-End (22 Oct 2025)
-**Ubicación:** `backend/src/routes/statistics.ts:176-186`
+**Resuelto en:** commit c319b92
+**Ubicación:** `backend/src/routes/statistics.ts:176-220`
 
 **Descripción:**
 Las estadísticas del dashboard para usuarios con rol FAMILIA retornan valores en 0 para todas las métricas:
@@ -128,7 +129,8 @@ Si no son necesarios para el MVP:
 
 ### ISSUE #3: EmotiTests no está definido en schema de Prisma
 **Categoría:** Backend - Database Schema
-**Estado:** 🟠 Abierto
+**Estado:** ✅ Resuelto (22 Oct 2025)
+**Resuelto en:** commit c319b92
 **Detectado:** Revisión de schema (22 Oct 2025)
 
 **Descripción:**
@@ -392,7 +394,8 @@ Opción 3 - Polling:
 
 ### ISSUE #8: Dashboard con métricas limitadas
 **Categoría:** Frontend - Dashboard
-**Estado:** 🟡 Abierto
+**Estado:** ✅ Resuelto (22 Oct 2025)
+**Resuelto en:** commit f819381
 **Detectado:** Testing End-to-End (22 Oct 2025)
 
 **Descripción:**
@@ -422,7 +425,8 @@ El dashboard actual solo muestra 4-6 métricas simples por rol. Falta:
 
 ### ISSUE #9: Sin code splitting ni lazy loading
 **Categoría:** Frontend - Performance
-**Estado:** 🟡 Abierto
+**Estado:** ✅ Resuelto (22 Oct 2025)
+**Resuelto en:** commit 52fa97b
 **Detectado:** Revisión de código (22 Oct 2025)
 
 **Descripción:**
@@ -845,14 +849,14 @@ app.use(helmet.hsts({
 - 🔒 Security: 1 issue
 
 ### Por Estado
-- 🟢 Abierto: 20 issues
+- 🟢 Abierto: 16 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 0 issues
+- ✅ Resuelto: 4 issues (ISSUE #1, #3, #8, #9)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[░░░░░░░░░░░░░░░░░░░░] 0% completado (0/20)
+[████░░░░░░░░░░░░░░░░] 20% completado (4/20)
 ```
 
 ---

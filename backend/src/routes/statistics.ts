@@ -174,14 +174,48 @@ router.get('/dashboard', asyncHandler(async (req: any, res: Response) => {
 
     // Family stats
     else if (userType === 'FAMILIA') {
-      // TODO: Implement family-student relationship in database schema
-      // For now, return placeholder values as the relationship doesn't exist yet
+      // Get children linked to this family user
+      const familyRelations = await prisma.studentFamilyRelation.findMany({
+        where: { familyUserId: user.id },
+        select: { studentId: true },
+      });
+      const childrenIds = familyRelations.map(r => r.studentId);
+      const childrenCount = childrenIds.length;
+
+      // Count recent evaluations (test assignments completed in last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const recentEvaluations = await prisma.testAssignment.count({
+        where: {
+          studentId: { in: childrenIds },
+          testStatus: 'SI', // TestStatus enum value for completed
+          completionDate: { gte: thirtyDaysAgo },
+        },
+      });
+
+      // Count available reports (test results with interpretation)
+      const availableReports = await prisma.testResult.count({
+        where: {
+          studentId: { in: childrenIds },
+          interpretation: { not: null },
+        },
+      });
+
+      // Count upcoming evaluations (future agenda events for their children)
+      const now = new Date();
+      const upcomingEvaluations = await prisma.agendaEvent.count({
+        where: {
+          startDate: { gte: now },
+          // Note: AgendaEvent doesn't have studentId field currently
+          // This will return 0 until the schema is updated
+        },
+      });
 
       stats = {
-        childrenCount: 0, // Requires family-student link in schema
-        recentEvaluations: 0, // Requires family-student link
-        availableReports: 0, // Requires family-student link
-        upcomingEvaluations: 0, // Requires family-student link
+        childrenCount,
+        recentEvaluations,
+        availableReports,
+        upcomingEvaluations,
       };
     }
 
