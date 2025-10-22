@@ -56,8 +56,30 @@ export const prisma = new PrismaClient({
   log: process.env['NODE_ENV'] === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
 });
 
-// Security middleware
+// HTTPS redirect middleware (only in production)
+if (process.env['NODE_ENV'] === 'production') {
+  app.use((req, res, next) => {
+    // Check if request is over HTTPS
+    const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+
+    if (!isSecure) {
+      logger.warn(`Redirecting HTTP request to HTTPS: ${req.url}`);
+      return res.redirect(301, `https://${req.headers.host}${req.url}`);
+    }
+
+    next();
+  });
+
+  logger.info('✅ HTTPS redirect middleware enabled for production');
+}
+
+// Security middleware with enhanced HSTS
 app.use(helmet({
+  hsts: process.env['NODE_ENV'] === 'production' ? {
+    maxAge: 31536000, // 1 year in seconds
+    includeSubDomains: true,
+    preload: true,
+  } : false, // Disable HSTS in development
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],

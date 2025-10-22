@@ -13,8 +13,8 @@
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
 | 🟠 Alta | 7 | 4 | 0 | 3 |
 | 🟡 Media | 5 | 3 | 0 | 2 |
-| 🟢 Baja | 8 | 7 | 0 | 1 |
-| **TOTAL** | **20** | **14** | **0** | **6** |
+| 🟢 Baja | 8 | 6 | 0 | 2 |
+| **TOTAL** | **20** | **13** | **0** | **7** |
 
 ---
 
@@ -768,44 +768,38 @@ No había rate limiting configurado en el backend para prevenir:
 
 ### ISSUE #20: Sin HTTPS forzado en producción
 **Categoría:** Infrastructure - Security
-**Estado:** 🟢 Abierto
+**Estado:** ✅ Resuelto (22 Oct 2025)
+**Resuelto en:** commit [pending]
 **Detectado:** Revisión de seguridad (22 Oct 2025)
 
 **Descripción:**
-No hay redirección automática de HTTP a HTTPS configurada.
+No había redirección automática de HTTP a HTTPS configurada.
 
-**Riesgos:**
+**Riesgos eliminados:**
 - Datos sensibles en texto plano
 - Tokens expuestos
 - Incumplimiento RGPD
 
-**Solución propuesta:**
-1. Configurar en servidor (Vercel/Railway):
-   - Activar "Force HTTPS"
-   - Configurar HSTS headers
+**Solución implementada:**
+1. Middleware de redirección HTTPS en `backend/src/index.ts`:
+   - Detecta requests HTTP en producción
+   - Redirección 301 permanente a HTTPS
+   - Soporta proxy headers (`x-forwarded-proto`)
+   - Logging de redirects para debugging
 
-2. En Express añadir middleware:
-```javascript
-app.use((req, res, next) => {
-  if (process.env.NODE_ENV === 'production' && !req.secure) {
-    return res.redirect(301, `https://${req.headers.host}${req.url}`);
-  }
-  next();
-});
-```
+2. Headers HSTS configurados con helmet:
+   - `max-age`: 31536000 (1 año)
+   - `includeSubDomains`: true
+   - `preload`: true (listo para HSTS preload list)
+   - Solo activo en producción (no afecta desarrollo local)
 
-3. Añadir headers de seguridad con helmet:
-```javascript
-app.use(helmet.hsts({
-  maxAge: 31536000,
-  includeSubDomains: true,
-  preload: true
-}));
-```
+3. Comprobaciones implementadas:
+   - Verifica `req.secure` para conexiones directas HTTPS
+   - Verifica `x-forwarded-proto` para proxies (Vercel, Railway)
+   - Middleware ejecutado antes de todas las rutas
 
-**Estimación:** 1-2 horas
-**Asignado a:** Pendiente
-**Prioridad:** Crítica para producción
+**Tiempo invertido:** 1 hora
+**Prioridad:** Crítica para producción ✅
 
 ---
 
@@ -849,26 +843,26 @@ app.use(helmet.hsts({
 - 🔒 Security: 1 issue
 
 ### Por Estado
-- 🟢 Abierto: 14 issues
+- 🟢 Abierto: 13 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 6 issues (ISSUE #1, #3, #8, #9, #19)
+- ✅ Resuelto: 7 issues (ISSUE #1, #3, #8, #9, #19, #20)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[██████░░░░░░░░░░░░░░] 30% completado (6/20)
+[███████░░░░░░░░░░░░░] 35% completado (7/20)
 ```
 
 ---
 
 ## 🎯 ROADMAP SUGERIDO
 
-### Sprint 1 (Semana 1-2)
+### Sprint 1 (Semana 1-2) ✅ COMPLETADO
 **Objetivo:** Resolver issues críticos para producción
 - ISSUE #1: Métricas FAMILIA ✅
 - ISSUE #3: Modelo EmotiTests ✅
 - ISSUE #19: Rate limiting ✅
-- ISSUE #20: HTTPS forzado (pendiente)
+- ISSUE #20: HTTPS forzado ✅
 
 ### Sprint 2 (Semana 3-4)
 **Objetivo:** Mejorar experiencia de usuario
