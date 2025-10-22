@@ -11,10 +11,10 @@
 | Prioridad | Total | Abiertos | En Progreso | Resueltos |
 |-----------|-------|----------|-------------|-----------|
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
-| 🟠 Alta | 7 | 4 | 0 | 3 |
+| 🟠 Alta | 7 | 3 | 0 | 4 |
 | 🟡 Media | 5 | 3 | 0 | 2 |
 | 🟢 Baja | 8 | 6 | 0 | 2 |
-| **TOTAL** | **20** | **13** | **0** | **7** |
+| **TOTAL** | **20** | **12** | **0** | **8** |
 
 ---
 
@@ -184,65 +184,52 @@ model EmotiTest {
 
 ### ISSUE #4: Falta validación de tokens expirados en frontend
 **Categoría:** Frontend - Authentication
-**Estado:** 🟠 Abierto
+**Estado:** ✅ Resuelto (22 Oct 2025)
+**Resuelto en:** commit [pending]
 **Detectado:** Revisión de código (22 Oct 2025)
 
 **Descripción:**
-El frontend no valida proactivamente si el token JWT ha expirado antes de hacer requests.
+El frontend no validaba proactivamente si el token JWT había expirado antes de hacer requests.
 
 **Causa raíz:**
-El interceptor de axios solo maneja errores 401 después de que el servidor responde.
+El interceptor de axios solo manejaba errores 401 después de que el servidor respondía.
 
-**Impacto:**
+**Impacto eliminado:**
 - Requests innecesarios a la API con tokens expirados
 - Mensajes de error poco claros para el usuario
 - Experiencia de usuario subóptima
 
-**Solución propuesta:**
-1. Añadir función para decodificar y validar expiración del token:
-```javascript
-import jwt_decode from 'jwt-decode';
+**Solución implementada:**
+1. Instalado paquete `jwt-decode` para decodificar tokens JWT
 
-const isTokenExpired = (token) => {
-  if (!token) return true;
-  try {
-    const decoded = jwt_decode(token);
-    return decoded.exp * 1000 < Date.now();
-  } catch {
-    return true;
-  }
-};
-```
+2. Creada función `isTokenExpired()` en `src/lib/api.js`:
+   - Decodifica el token JWT
+   - Verifica la fecha de expiración con buffer de 30 segundos
+   - Maneja errores de decodificación
 
-2. Modificar interceptor de request en `src/lib/api.js`:
-```javascript
-api.interceptors.request.use(
-  async (config) => {
-    const token = localStorage.getItem('emooti_token');
-    const refreshToken = localStorage.getItem('emooti_refresh_token');
+3. Implementado sistema de refresh automático:
+   - Detecta tokens expirados antes de hacer requests
+   - Intenta refresh automático con el refresh token
+   - Maneja concurrencia (múltiples requests simultáneos)
+   - Sistema de suscriptores para requests en espera
+   - Redirección automática a login si refresh falla
 
-    if (token && isTokenExpired(token)) {
-      if (refreshToken && !isTokenExpired(refreshToken)) {
-        // Intentar refresh automático
-        const newTokens = await refreshAccessToken(refreshToken);
-        config.headers.Authorization = `Bearer ${newTokens.token}`;
-      } else {
-        // Redirect a login
-        window.location.href = '/login';
-        return Promise.reject(new Error('Token expired'));
-      }
-    } else if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  }
-);
-```
+4. Mejoras en el interceptor de requests:
+   - Validación proactiva de expiración
+   - Refresh automático transparente para el usuario
+   - Evita race conditions con flag `isRefreshing`
+   - Gestiona cola de requests durante el refresh
+   - Skip de validación para endpoint de refresh
 
-**Estimación:** 2-3 horas
-**Asignado a:** Pendiente
-**Referencias:**
-- `src/lib/api.js:18-29`
+**Beneficios:**
+- Menos requests fallidos a la API
+- Experiencia de usuario fluida (refresh transparente)
+- Sesiones extendidas automáticamente
+- Mejor manejo de errores
+- Reducción de carga en el servidor
+
+**Tiempo invertido:** 2 horas
+**Prioridad:** Alta para UX ✅
 
 ---
 
@@ -843,14 +830,14 @@ No había redirección automática de HTTP a HTTPS configurada.
 - 🔒 Security: 1 issue
 
 ### Por Estado
-- 🟢 Abierto: 13 issues
+- 🟢 Abierto: 12 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 7 issues (ISSUE #1, #3, #8, #9, #19, #20)
+- ✅ Resuelto: 8 issues (ISSUE #1, #3, #4, #8, #9, #19, #20)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[███████░░░░░░░░░░░░░] 35% completado (7/20)
+[████████░░░░░░░░░░░░] 40% completado (8/20)
 ```
 
 ---

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { toast } from 'sonner';
+import { jwtDecode } from 'jwt-decode';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
@@ -14,13 +15,99 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Token validation utility
+const isTokenExpired = (token) => {
+  if (!token) return true;
+  try {
+    const decoded = jwtDecode(token);
+    // Add 30 seconds buffer to account for clock skew
+    return decoded.exp * 1000 < Date.now() + 30000;
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return true;
+  }
+};
+
+// Token refresh utility
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+const subscribeTokenRefresh = (cb) => {
+  refreshSubscribers.push(cb);
+};
+
+const onRefreshed = (token) => {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+};
+
+const refreshAccessToken = async (refreshToken) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+      refreshToken,
+    });
+
+    const { token: newToken, refreshToken: newRefreshToken } = response.data.data;
+    localStorage.setItem('emooti_token', newToken);
+    localStorage.setItem('emooti_refresh_token', newRefreshToken);
+
+    return newToken;
+  } catch (error) {
+    // Refresh failed, clear tokens and redirect to login
+    localStorage.removeItem('emooti_token');
+    localStorage.removeItem('emooti_refresh_token');
+    window.location.href = '/login';
+    throw error;
+  }
+};
+
+// Request interceptor to add auth token and handle expiration
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const token = localStorage.getItem('emooti_token');
-    if (token) {
+    const refreshToken = localStorage.getItem('emooti_refresh_token');
+
+    // Skip token validation for refresh endpoint
+    if (config.url?.includes('/auth/refresh')) {
+      return config;
+    }
+
+    // Check if token is expired
+    if (token && isTokenExpired(token)) {
+      // Token is expired, try to refresh
+      if (refreshToken && !isTokenExpired(refreshToken)) {
+        if (!isRefreshing) {
+          isRefreshing = true;
+          try {
+            const newToken = await refreshAccessToken(refreshToken);
+            isRefreshing = false;
+            onRefreshed(newToken);
+            config.headers.Authorization = `Bearer ${newToken}`;
+          } catch (error) {
+            isRefreshing = false;
+            return Promise.reject(error);
+          }
+        } else {
+          // Wait for the ongoing refresh to complete
+          return new Promise((resolve) => {
+            subscribeTokenRefresh((newToken) => {
+              config.headers.Authorization = `Bearer ${newToken}`;
+              resolve(config);
+            });
+          });
+        }
+      } else {
+        // Refresh token is also expired, redirect to login
+        localStorage.removeItem('emooti_token');
+        localStorage.removeItem('emooti_refresh_token');
+        window.location.href = '/login';
+        return Promise.reject(new Error('Session expired'));
+      }
+    } else if (token) {
+      // Token is still valid
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => {
