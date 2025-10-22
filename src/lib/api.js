@@ -313,10 +313,9 @@ export const apiClient = {
   profile: {
     get: () => api.get('/profile'),
     update: (data) => api.put('/profile', data),
-    changePassword: (data) => api.post('/profile/change-password', data),
-    uploadAvatar: (formData) => api.post('/profile/avatar', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    }),
+    changePassword: (data) => api.put('/profile/password', data),
+    getActivity: (params = {}) => api.get('/profile/activity', { params }),
+    getStatistics: () => api.get('/profile/statistics'),
   },
   
   // Public methods (no auth required)
