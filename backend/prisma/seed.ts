@@ -352,6 +352,147 @@ async function main() {
 
   console.log('✅ Value configuration created');
 
+  // Create sample EmotiTests
+  const emotiTest1 = await prisma.emotiTest.upsert({
+    where: { code: 'BAT-SCR-001' },
+    update: {},
+    create: {
+      code: 'BAT-SCR-001',
+      name: 'Batelle SCR - Escala de Cribado',
+      description: 'Escala de cribado para evaluación del desarrollo en edades tempranas',
+      category: 'Desarrollo Temprano',
+      testType: 'BATELLE_SCR',
+      ageRangeMin: 0,
+      ageRangeMax: 8,
+      duration: 30,
+      configuration: {
+        sections: ['Personal/Social', 'Adaptativo', 'Motor', 'Comunicación', 'Cognitivo'],
+        scoring: 'percentile',
+        cutoffScore: 25,
+      },
+      version: '1.0',
+      isActive: true,
+      requiresTablet: true,
+      requiresInternet: true,
+      createdBy: adminUser.id,
+      lastModified: new Date(),
+    },
+  });
+
+  const emotiTest2 = await prisma.emotiTest.upsert({
+    where: { code: 'CL-001' },
+    update: {},
+    create: {
+      code: 'CL-001',
+      name: 'Circuito Logopedia - Evaluación Completa',
+      description: 'Evaluación integral de habilidades logopédicas: articulación, fluencia, vocabulario y comprensión',
+      category: 'Logopedia',
+      testType: 'CIRCUITO_LOGOPEDIA',
+      ageRangeMin: 3,
+      ageRangeMax: 12,
+      duration: 45,
+      configuration: {
+        sections: ['Articulación', 'Fluencia', 'Vocabulario', 'Comprensión'],
+        scoring: 'raw_score',
+        passingScore: 60,
+      },
+      version: '1.0',
+      isActive: true,
+      requiresTablet: true,
+      requiresInternet: true,
+      createdBy: adminUser.id,
+      lastModified: new Date(),
+    },
+  });
+
+  const emotiTest3 = await prisma.emotiTest.upsert({
+    where: { code: 'CS-001' },
+    update: {},
+    create: {
+      code: 'CS-001',
+      name: 'Circuito Sensoriomotor - Desarrollo Psicomotor',
+      description: 'Evaluación del desarrollo sensoriomotor: motricidad gruesa, motricidad fina, coordinación y percepción',
+      category: 'Psicomotricidad',
+      testType: 'CIRCUITO_SENSORIOMOTOR',
+      ageRangeMin: 2,
+      ageRangeMax: 10,
+      duration: 40,
+      configuration: {
+        sections: ['Motricidad Gruesa', 'Motricidad Fina', 'Coordinación', 'Percepción'],
+        scoring: 'standard_score',
+        mean: 100,
+        sd: 15,
+      },
+      version: '1.0',
+      isActive: true,
+      requiresTablet: true,
+      requiresInternet: true,
+      createdBy: adminUser.id,
+      lastModified: new Date(),
+    },
+  });
+
+  const emotiTest4 = await prisma.emotiTest.upsert({
+    where: { code: 'E2P-001' },
+    update: {},
+    create: {
+      code: 'E2P-001',
+      name: 'E2P - Evaluación de Procesos Cognitivos',
+      description: 'Evaluación de atención, memoria, funciones ejecutivas y velocidad de procesamiento',
+      category: 'Procesos Cognitivos',
+      testType: 'E2P',
+      ageRangeMin: 6,
+      ageRangeMax: 16,
+      duration: 50,
+      configuration: {
+        sections: ['Atención', 'Memoria', 'Funciones Ejecutivas', 'Velocidad de Procesamiento'],
+        scoring: 'percentile',
+        normGroup: 'edad',
+      },
+      version: '1.0',
+      isActive: true,
+      requiresTablet: true,
+      requiresInternet: true,
+      createdBy: adminUser.id,
+      lastModified: new Date(),
+    },
+  });
+
+  const emotiTest5 = await prisma.emotiTest.upsert({
+    where: { code: 'BAT-SCR-002' },
+    update: {},
+    create: {
+      code: 'BAT-SCR-002',
+      name: 'Batelle SCR - Versión Extendida',
+      description: 'Versión extendida de la escala de cribado Batelle para evaluación más detallada',
+      category: 'Desarrollo Temprano',
+      testType: 'BATELLE_SCR',
+      ageRangeMin: 0,
+      ageRangeMax: 12,
+      duration: 60,
+      configuration: {
+        sections: ['Personal/Social', 'Adaptativo', 'Motor', 'Comunicación', 'Cognitivo'],
+        scoring: 'percentile',
+        cutoffScore: 25,
+        extended: true,
+      },
+      version: '2.0',
+      isActive: true,
+      requiresTablet: true,
+      requiresInternet: true,
+      createdBy: adminUser.id,
+      lastModified: new Date(),
+    },
+  });
+
+  console.log('✅ EmotiTests created:', {
+    batelleSCR: emotiTest1.code,
+    circuitoLogopedia: emotiTest2.code,
+    circuitoSensoriomotor: emotiTest3.code,
+    e2p: emotiTest4.code,
+    batelleExtended: emotiTest5.code,
+  });
+
   console.log('');
   console.log('🎉 Database seeding completed successfully!');
   console.log('');
@@ -369,6 +510,7 @@ async function main() {
   console.log('- 1 Device');
   console.log('- 1 Company configuration');
   console.log('- 1 Value configuration');
+  console.log('- 5 EmotiTests (Batelle SCR, Circuito Logopedia, Circuito Sensoriomotor, E2P)');
   console.log('');
   console.log('🔑 Default credentials:');
   console.log('  - admin@emooti.com / admin123');

@@ -164,6 +164,8 @@ export const apiClient = {
     create: (testData) => api.post('/emoti-tests', testData),
     update: (id, testData) => api.put(`/emoti-tests/${id}`, testData),
     delete: (id) => api.delete(`/emoti-tests/${id}`),
+    getStatistics: (id) => api.get(`/emoti-tests/${id}/statistics`),
+    getByAge: (age) => api.get(`/emoti-tests/by-age/${age}`),
   },
   
   // Agenda methods

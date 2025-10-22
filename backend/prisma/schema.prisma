@@ -164,6 +164,7 @@ model Address {
 model TestAssignment {
   id             String        @id @default(cuid())
   studentId      String        @map("student_id")
+  emotiTestId    String?       @map("emoti_test_id")
   testTitle      String        @map("test_title")
   testLink       String?       @map("test_link")
   testDate       DateTime?     @map("test_date")
@@ -180,6 +181,7 @@ model TestAssignment {
 
   // Relations
   student     Student      @relation(fields: [studentId], references: [id])
+  emotiTest   EmotiTest?   @relation(fields: [emotiTestId], references: [id])
   testResults TestResult[]
 
   @@map("test_assignments")
@@ -226,17 +228,28 @@ model TestResult {
 // ==============================================
 
 model EmotiTest {
-  id            String        @id @default(cuid())
-  testType      EmotiTestType @map("test_type")
-  configuration Json
-  htmlContent   String?       @map("html_content")
-  version       String        @default("1.0")
-  createdBy     String        @map("created_by")
-  lastModified  DateTime      @default(now()) @map("last_modified")
-  isActive      Boolean       @default(true) @map("is_active")
-  description   String?
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
+  id               String        @id @default(cuid())
+  code             String        @unique
+  name             String
+  description      String?
+  category         String
+  testType         EmotiTestType @map("test_type")
+  ageRangeMin      Int           @map("age_range_min")
+  ageRangeMax      Int           @map("age_range_max")
+  duration         Int // duration in minutes
+  configuration    Json
+  htmlContent      String?       @map("html_content")
+  version          String        @default("1.0")
+  isActive         Boolean       @default(true) @map("is_active")
+  requiresTablet   Boolean       @default(false) @map("requires_tablet")
+  requiresInternet Boolean       @default(true) @map("requires_internet")
+  createdBy        String        @map("created_by")
+  lastModified     DateTime      @default(now()) @map("last_modified")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  testAssignments TestAssignment[]
 
   @@map("emoti_tests")
 }
