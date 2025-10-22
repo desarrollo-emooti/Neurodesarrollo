@@ -297,6 +297,7 @@ export const apiClient = {
   // Statistics methods
   statistics: {
     getDashboard: () => api.get('/statistics/dashboard'),
+    getDashboardCharts: () => api.get('/statistics/dashboard-charts'),
     getUsers: (params = {}) => api.get('/statistics/users', { params }),
     getStudents: (params = {}) => api.get('/statistics/students', { params }),
     getTestResults: (params = {}) => api.get('/statistics/test-results', { params }),

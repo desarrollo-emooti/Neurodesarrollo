@@ -203,4 +203,92 @@ router.get('/dashboard', asyncHandler(async (req: any, res: Response) => {
   }
 }));
 
+// GET /api/v1/statistics/dashboard-charts
+router.get('/dashboard-charts', asyncHandler(async (req: any, res: Response) => {
+  const user = req.user;
+
+  try {
+    const now = new Date();
+    const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // Evolución de Tests Completados (últimos 7 días)
+    const testEvolution = await prisma.$queryRaw`
+      SELECT
+        DATE(completion_date) as date,
+        COUNT(*) as count
+      FROM test_assignments
+      WHERE completion_date >= ${last7Days}
+        AND completion_date <= ${now}
+        AND test_status = 'COMPLETADO'
+      GROUP BY DATE(completion_date)
+      ORDER BY date ASC
+    `;
+
+    // Tests por Estado
+    const testsByStatus = await Promise.all([
+      prisma.testAssignment.count({ where: { testStatus: 'PENDIENTE' } }),
+      prisma.testAssignment.count({ where: { testStatus: 'EN_PROGRESO' } }),
+      prisma.testAssignment.count({ where: { testStatus: 'COMPLETADO' } }),
+    ]).then(([pending, inProgress, completed]) => [
+      { status: 'Pendiente', count: pending, fill: '#f59e0b' },
+      { status: 'En Progreso', count: inProgress, fill: '#3b82f6' },
+      { status: 'Completado', count: completed, fill: '#10b981' },
+    ]);
+
+    // Actividad Semanal (usuarios activos por día - últimos 7 días)
+    const weeklyActivity = await prisma.$queryRaw`
+      SELECT
+        DATE(timestamp) as date,
+        COUNT(DISTINCT user_id) as count
+      FROM audit_logs
+      WHERE timestamp >= ${last7Days}
+        AND timestamp <= ${now}
+        AND action = 'LOGIN'
+      GROUP BY DATE(timestamp)
+      ORDER BY date ASC
+    `;
+
+    // Completar los días faltantes con 0
+    const allDays = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const dateStr = date.toISOString().split('T')[0];
+
+      const existingEvolution = (testEvolution as any[]).find(
+        (item: any) => item.date?.toISOString().split('T')[0] === dateStr
+      );
+      const existingActivity = (weeklyActivity as any[]).find(
+        (item: any) => item.date?.toISOString().split('T')[0] === dateStr
+      );
+
+      allDays.push({
+        date: dateStr,
+        testsCompleted: existingEvolution ? Number(existingEvolution.count) : 0,
+        activeUsers: existingActivity ? Number(existingActivity.count) : 0,
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        testEvolution: allDays.map(d => ({ date: d.date, count: d.testsCompleted })),
+        testsByStatus,
+        weeklyActivity: allDays.map(d => ({ date: d.date, count: d.activeUsers })),
+      },
+      timestamp: new Date().toISOString(),
+    });
+
+  } catch (error) {
+    console.error('Error fetching dashboard charts:', error);
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Error al obtener datos de gráficos',
+      },
+    });
+  }
+}));
+
 export default router;
