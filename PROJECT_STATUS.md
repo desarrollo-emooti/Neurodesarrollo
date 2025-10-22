@@ -139,6 +139,94 @@
 
 ---
 
+## 🗺️ NAVEGACIÓN Y RUTAS
+
+### Rutas Configuradas ✅
+Todas las rutas están correctamente configuradas en `src/App.jsx`:
+- ✅ `/dashboard` - Dashboard principal
+- ✅ `/users` - Gestión de usuarios
+- ✅ `/students` - Gestión de estudiantes
+- ✅ `/centers` - Gestión de centros
+- ✅ `/test-assignments` - Asignación de pruebas
+- ✅ `/test-results` - Resultados de pruebas
+- ✅ `/emoti-tests` - Pruebas EMOOTI
+- ✅ `/agenda` - Calendario y eventos
+- ✅ `/devices` - Gestión de dispositivos
+- ✅ `/inventory` - Gestión de inventario
+- ✅ `/subscriptions` - Gestión de suscripciones
+- ✅ `/invoices` - Gestión de facturas
+- ✅ `/security` - Seguridad y auditoría
+- ✅ `/configuration` - Configuración del sistema
+- ✅ `/profile` - Perfil de usuario
+- ⏳ `/authorizations` - Autorizaciones (backend disabled)
+- ⏳ `/export` - Exportación (backend disabled)
+- ⏳ `/import` - Importación (backend disabled)
+- ⏳ `/tutorials` - Tutoriales (backend disabled)
+- ⏳ `/reports` - Informes (backend disabled)
+- ⏳ `/statistics` - Estadísticas (parcialmente implementado)
+- ⏳ `/database` - Base de datos (backend disabled)
+
+### Menú Lateral (Sidebar) ✅
+El menú está organizado en grupos funcionales con permisos por rol:
+
+**Dashboard** (Todos)
+- Dashboard principal
+
+**Gestión de Usuarios** (ADMIN, CLINICA, ORIENTADOR)
+- Miembros (solo ADMIN)
+- Alumnos
+- Gestión de Centros (solo ADMIN)
+- Exportar Usuarios
+
+**Gestión de Pruebas** (ADMIN, CLINICA, ORIENTADOR, EXAMINADOR)
+- Asignación de Pruebas
+- Resultados de Pruebas
+- Historial por Alumno
+- Import. Automática (solo ADMIN)
+- Import. Manual (solo ADMIN)
+
+**Financiero** (solo ADMIN)
+- Gestión de Suscripciones
+- Facturación
+- Historial de Cobros
+
+**Agenda** (ADMIN, CLINICA, ORIENTADOR)
+- Vista de calendario
+
+**Recursos** (ADMIN, CLINICA, ORIENTADOR)
+- Dispositivos
+- Inventario
+
+**Reportes y Análisis** (ADMIN, CLINICA, ORIENTADOR)
+- Estadísticas
+- Informes
+- Pruebas
+
+**Seguridad y RGPD** (solo ADMIN)
+- Panel de seguridad
+
+**Configuración** (solo ADMIN)
+- Valoraciones de Pruebas
+- Ajustes
+- Plantillas
+- Pruebas EMOOTI
+- Bases de Datos
+
+**Tutoriales** (Todos)
+- Tutoriales y ayuda
+
+### Características del Menú
+- ✅ Grupos colapsables
+- ✅ Permisos por rol de usuario
+- ✅ Sidebar colapsable (ancho completo / iconos)
+- ✅ Indicador de ruta activa
+- ✅ Animaciones suaves (Framer Motion)
+- ✅ Responsive (mobile overlay)
+- ✅ Scroll personalizado
+- ✅ Avatar de usuario en footer
+
+---
+
 ## 🛠️ STACK TECNOLÓGICO
 
 ### Frontend
