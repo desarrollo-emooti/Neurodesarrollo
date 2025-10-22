@@ -3,7 +3,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
-import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import passport from './config/passport';
@@ -38,6 +37,7 @@ import publicRoutes from './routes/public';
 import { errorHandler } from './middleware/errorHandler';
 import { auditLogger } from './middleware/auditLogger';
 import { anomalyDetection } from './middleware/anomalyDetection';
+import { apiLimiter, publicLimiter } from './middleware/rateLimiter';
 
 // Import services
 import { logger } from './utils/logger';
@@ -92,23 +92,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
-// Rate limiting (disabled in development)
-if (process.env['NODE_ENV'] === 'production') {
-  const limiter = rateLimit({
-    windowMs: parseInt(process.env['RATE_LIMIT_WINDOW_MS'] || '900000'), // 15 minutes
-    max: parseInt(process.env['RATE_LIMIT_MAX_REQUESTS'] || '100'), // limit each IP to 100 requests per windowMs
-    message: {
-      success: false,
-      error: {
-        code: 'RATE_LIMIT_EXCEEDED',
-        message: 'Too many requests from this IP, please try again later.',
-      },
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-
-  app.use(limiter);
+// Apply general API rate limiting to all routes (except /health)
+// More lenient in development, stricter in production
+if (process.env['NODE_ENV'] !== 'development') {
+  logger.info('Rate limiting enabled for production environment');
+  app.use('/api', apiLimiter);
+} else {
+  logger.info('Rate limiting disabled for development environment');
 }
 
 // Body parsing middleware
@@ -170,8 +160,8 @@ app.use(`/api/${API_VERSION}/statistics`, statisticsRoutes);
 app.use(`/api/${API_VERSION}/database`, databaseRoutes);
 app.use(`/api/${API_VERSION}/profile`, profileRoutes);
 
-// Public test endpoint (no authentication required)
-app.use('/api/public', publicRoutes);
+// Public test endpoint (no authentication required) - Apply stricter rate limiting
+app.use('/api/public', publicLimiter, publicRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

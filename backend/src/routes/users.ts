@@ -7,6 +7,7 @@ import { verifyToken, requireAdmin, requireClinicalStaff } from './auth';
 import { setAuditData } from '../middleware/auditLogger';
 import { AuditAction } from '@prisma/client';
 import { body, param, query, validationResult } from 'express-validator';
+import { strictLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -562,6 +563,7 @@ router.delete('/:id',
 // Bulk operations (Admin only)
 router.post('/bulk',
   requireAdmin,
+  strictLimiter, // Apply strict rate limiting to bulk operations
   [
     body('action').isIn(['update', 'delete', 'export']).withMessage('Invalid bulk action'),
     body('userIds').isArray().isLength({ min: 1 }).withMessage('User IDs array is required'),

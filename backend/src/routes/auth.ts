@@ -8,6 +8,7 @@ import { logger } from '../utils/logger';
 import { asyncHandler, authErrorHandler, CustomError } from '../middleware/errorHandler';
 import { logAuditEvent } from '../middleware/auditLogger';
 import { AuditAction } from '@prisma/client';
+import { loginLimiter, authLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -119,8 +120,8 @@ const generateRefreshToken = (user: any) => {
   } as jwt.SignOptions);
 };
 
-// Email/Password Login
-router.post('/login', asyncHandler(async (req: Request, res: Response) => {
+// Email/Password Login (with rate limiting)
+router.post('/login', loginLimiter, asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -305,8 +306,8 @@ router.get('/me', asyncHandler(async (req: any, res: Response) => {
   }
 }));
 
-// Refresh token
-router.post('/refresh', asyncHandler(async (req: Request, res: Response) => {
+// Refresh token (with rate limiting)
+router.post('/refresh', authLimiter, asyncHandler(async (req: Request, res: Response) => {
   try {
     const { refreshToken } = req.body;
     

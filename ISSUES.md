@@ -11,10 +11,10 @@
 | Prioridad | Total | Abiertos | En Progreso | Resueltos |
 |-----------|-------|----------|-------------|-----------|
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
-| 🟠 Alta | 7 | 5 | 0 | 2 |
+| 🟠 Alta | 7 | 4 | 0 | 3 |
 | 🟡 Media | 5 | 3 | 0 | 2 |
-| 🟢 Baja | 8 | 8 | 0 | 0 |
-| **TOTAL** | **20** | **16** | **0** | **4** |
+| 🟢 Baja | 8 | 7 | 0 | 1 |
+| **TOTAL** | **20** | **14** | **0** | **6** |
 
 ---
 
@@ -731,38 +731,38 @@ No hay sistema de backups automatizados configurado.
 
 ### ISSUE #19: Sin rate limiting configurado
 **Categoría:** Backend - Security
-**Estado:** 🟢 Abierto
+**Estado:** ✅ Resuelto (22 Oct 2025)
+**Resuelto en:** commit [pending]
 **Detectado:** Revisión de seguridad (22 Oct 2025)
 
 **Descripción:**
-No hay rate limiting configurado en el backend para prevenir:
+No había rate limiting configurado en el backend para prevenir:
 - Brute force en login
 - Spam de requests
 - DDoS básico
 
-**Solución propuesta:**
-1. Instalar express-rate-limit
-2. Configurar diferentes límites por endpoint:
-   - Login: 5 requests/15min por IP
-   - API general: 100 requests/15min por usuario
-   - Public endpoints: 20 requests/15min por IP
+**Solución implementada:**
+1. Creado archivo `backend/src/middleware/rateLimiter.ts` con 5 limitadores diferentes:
+   - `loginLimiter`: 5 requests/15min por IP (para /auth/login)
+   - `authLimiter`: 3 requests/hora por IP (para /auth/refresh y operaciones de autenticación)
+   - `apiLimiter`: 100 requests/15min por usuario/IP (para rutas API generales)
+   - `strictLimiter`: 10 requests/hora por usuario (para operaciones sensibles como bulk delete/update)
+   - `publicLimiter`: 20 requests/15min por IP (para endpoints públicos sin autenticación)
 
-3. Implementar:
-```javascript
-import rateLimit from 'express-rate-limit';
+2. Aplicado en:
+   - `/auth/login`: loginLimiter
+   - `/auth/refresh`: authLimiter
+   - `/api/*`: apiLimiter (solo en producción)
+   - `/api/public`: publicLimiter
+   - `/users/bulk`: strictLimiter
 
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: 'Demasiados intentos de login, intenta en 15 minutos'
-});
+3. Headers configurados:
+   - `RateLimit-*` headers estándar incluidos
+   - Mensajes de error personalizados en español
+   - Status 429 con códigos de error consistentes
 
-router.post('/login', loginLimiter, ...);
-```
-
-**Estimación:** 2-3 horas
-**Asignado a:** Pendiente
-**Prioridad:** Alta para producción
+**Tiempo invertido:** 2 horas
+**Prioridad:** Alta para producción ✅
 
 ---
 
@@ -849,14 +849,14 @@ app.use(helmet.hsts({
 - 🔒 Security: 1 issue
 
 ### Por Estado
-- 🟢 Abierto: 16 issues
+- 🟢 Abierto: 14 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 4 issues (ISSUE #1, #3, #8, #9)
+- ✅ Resuelto: 6 issues (ISSUE #1, #3, #8, #9, #19)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[████░░░░░░░░░░░░░░░░] 20% completado (4/20)
+[██████░░░░░░░░░░░░░░] 30% completado (6/20)
 ```
 
 ---
@@ -865,10 +865,10 @@ app.use(helmet.hsts({
 
 ### Sprint 1 (Semana 1-2)
 **Objetivo:** Resolver issues críticos para producción
-- ISSUE #1: Métricas FAMILIA
-- ISSUE #3: Modelo EmotiTests
-- ISSUE #19: Rate limiting
-- ISSUE #20: HTTPS forzado
+- ISSUE #1: Métricas FAMILIA ✅
+- ISSUE #3: Modelo EmotiTests ✅
+- ISSUE #19: Rate limiting ✅
+- ISSUE #20: HTTPS forzado (pendiente)
 
 ### Sprint 2 (Semana 3-4)
 **Objetivo:** Mejorar experiencia de usuario
