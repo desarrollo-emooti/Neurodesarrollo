@@ -13,8 +13,8 @@
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
 | 🟠 Alta | 7 | 0 | 0 | 7 |
 | 🟡 Media | 5 | 0 | 0 | 5 |
-| 🟢 Baja | 8 | 6 | 0 | 2 |
-| **TOTAL** | **20** | **6** | **0** | **15** |
+| 🟢 Baja | 8 | 5 | 0 | 3 |
+| **TOTAL** | **20** | **5** | **0** | **16** |
 
 ---
 
@@ -734,21 +734,70 @@ No había sistema robusto para carga de archivos:
 
 ### ISSUE #13: Sin dark mode
 **Categoría:** Frontend - UI/UX
-**Estado:** 🟢 Abierto
+**Estado:** ✅ Resuelto (23 Oct 2025)
+**Resuelto en:** commit d16b633
 **Detectado:** Revisión de features (22 Oct 2025)
 
 **Descripción:**
-Solo hay tema claro. Usuarios no pueden cambiar a tema oscuro.
+Solo había tema claro. Usuarios no podían cambiar a tema oscuro.
 
-**Solución propuesta:**
-1. Configurar Tailwind para dark mode
-2. Crear contexto ThemeContext
-3. Añadir toggle en Layout
-4. Persistir preferencia en localStorage
-5. Actualizar todos los componentes con clases dark:
+**Impacto eliminado:**
+- Mejor accesibilidad para usuarios con sensibilidad a la luz
+- Reducción de fatiga visual en uso prolongado
+- Opción de personalización popular entre usuarios
+- UX moderna y profesional
 
-**Estimación:** 10-12 horas
-**Asignado a:** Pendiente
+**Solución implementada:**
+
+1. **Infraestructura de tema** (`src/contexts/ThemeContext.jsx`):
+   - ThemeProvider con persistencia en localStorage
+   - Detección automática de preferencia del sistema (prefers-color-scheme)
+   - Hook useTheme para acceso desde cualquier componente
+   - Listeners para cambios en preferencia del sistema
+   - Sincronización automática con clases del DOM
+
+2. **Componente ThemeToggle** (`src/components/ThemeToggle.jsx`):
+   - Botón animado con iconos Sol/Luna
+   - Transiciones suaves entre estados
+   - Indicadores visuales claros
+   - Labels de accesibilidad (aria-label)
+
+3. **Integración en aplicación**:
+   - App.jsx: ThemeProvider envolviendo toda la app
+   - Header.jsx: useTheme en lugar de useAppStore para tema
+   - Sidebar.jsx: Clases dark en nav items, grupos, bordes
+   - Layout.jsx: Clases dark en contenedor principal y overlay
+
+4. **Actualización de estilos CSS** (`src/index.css`):
+   - Variables CSS dark ya existían en :root y .dark
+   - Actualización de todas las clases custom EMOOTI:
+     * .emooti-card (backgrounds, borders)
+     * .emooti-sidebar y .emooti-sidebar-item
+     * .emooti-input (bg, border, text, focus)
+     * .emooti-table (th/td backgrounds, borders)
+     * .emooti-modal (overlay y content)
+     * .emooti-badge-* (todas las variantes)
+     * .emooti-skeleton
+     * .emooti-scrollbar (track y thumb con variantes dark)
+
+**Características técnicas:**
+- Tailwind configurado con darkMode: ["class"]
+- Persistencia en localStorage con key "theme"
+- Auto-detección de prefers-color-scheme
+- Clases aplicadas en document.documentElement
+- Transiciones suaves con Tailwind transitions
+- Compatible con todos los navegadores modernos
+
+**Beneficios:**
+- UX mejorada con opción de tema oscuro completa
+- Accesibilidad mejorada para usuarios con sensibilidad a la luz
+- Reducción de fatiga visual en uso prolongado
+- Personalización moderna y popular
+- Sistema extensible para futuros temas
+- Detección inteligente de preferencias del usuario
+
+**Tiempo invertido:** 4 horas
+**Prioridad:** Baja (feature nice-to-have) ✅
 **Referencias:**
 - PROJECT_STATUS.md - "Próximos Pasos - Prioridad Baja #9"
 
@@ -1018,12 +1067,12 @@ No había redirección automática de HTTP a HTTPS configurada.
 ### Por Estado
 - 🟢 Abierto: 5 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 15 issues (ISSUE #1, #2, #3, #4, #5, #6, #7, #8, #9, #10, #11, #12, #19, #20)
+- ✅ Resuelto: 16 issues (ISSUE #1, #2, #3, #4, #5, #6, #7, #8, #9, #10, #11, #12, #13, #19, #20)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[███████████████░░░░░] 75% completado (15/20)
+[████████████████░░░░] 80% completado (16/20)
 ```
 
 ---
@@ -1060,7 +1109,6 @@ No había redirección automática de HTTP a HTTPS configurada.
 
 ### Backlog
 **Features no críticas:**
-- ISSUE #13: Dark mode
 - ISSUE #14: i18n
 - ISSUE #15: PWA
 
@@ -1091,7 +1139,7 @@ No había redirección automática de HTTP a HTTPS configurada.
 
 ---
 
-**Última revisión:** 22 de octubre de 2025
+**Última revisión:** 23 de octubre de 2025
 **Próxima revisión:** Semanal o cuando se detecten nuevos issues
 
 _© 2025 EMOOTI Hub SL - Gestión de Issues Interna_
