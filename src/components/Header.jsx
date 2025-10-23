@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useAppStore from '../store/appStore';
+import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -23,11 +24,12 @@ const Header = () => {
   const {
     sidebarOpen,
     toggleSidebar,
-    theme,
-    setTheme,
     searchQuery,
     setSearchQuery
   } = useAppStore();
+
+  // Use theme from context
+  const { theme, toggleTheme } = useTheme();
 
   // Use notifications hook with 60 second polling interval
   const { unreadCount } = useNotifications(60000);
@@ -36,12 +38,8 @@ const Header = () => {
     await logout();
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
-
   return (
-    <header className="bg-white/90 backdrop-blur-sm border-b border-slate-200 shadow-sm">
+    <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-slate-200 dark:border-gray-700 shadow-sm">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left side */}
         <div className="flex items-center space-x-4">
@@ -57,12 +55,12 @@ const Header = () => {
 
           {/* Search */}
           <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-gray-500" />
             <Input
               placeholder="Buscar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-64"
+              className="pl-10 w-64 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
             />
           </div>
         </div>
@@ -105,10 +103,10 @@ const Header = () => {
           {/* User menu */}
           <div className="flex items-center space-x-3">
             <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium text-slate-900">
+              <p className="text-sm font-medium text-slate-900 dark:text-gray-100">
                 {user?.fullName || 'Usuario'}
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-gray-400">
                 {user?.userType || 'Usuario'}
               </p>
             </div>

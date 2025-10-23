@@ -12,7 +12,7 @@ const Layout = ({ children }) => {
   const isOnline = useOnlineStatus();
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
       {/* Sidebar */}
       <AnimatePresence>
         {sidebarOpen && (
@@ -22,8 +22,8 @@ const Layout = ({ children }) => {
             exit={{ x: -300, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className={`
-              ${sidebarCollapsed ? 'w-16' : 'w-72'} 
-              bg-slate-800 text-white shadow-xl z-30
+              ${sidebarCollapsed ? 'w-16' : 'w-72'}
+              bg-slate-800 dark:bg-gray-900 text-white shadow-xl z-30
               transition-all duration-300 ease-in-out
             `}
           >
@@ -59,7 +59,7 @@ const Layout = ({ children }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-20 lg:hidden"
+            className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-20 lg:hidden"
             onClick={() => useAppStore.getState().toggleSidebar()}
           />
         )}

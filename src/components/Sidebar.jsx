@@ -251,10 +251,10 @@ const Sidebar = () => {
         className={({ isActive }) =>
           cn(
             'flex items-center px-4 py-2.5 text-sm font-medium transition-colors duration-200',
-            'hover:bg-slate-700 rounded-lg mx-2',
+            'hover:bg-slate-700 dark:hover:bg-gray-700 rounded-lg mx-2',
             isActive
               ? 'bg-emooti-blue-600 text-white'
-              : 'text-slate-300'
+              : 'text-slate-300 dark:text-gray-300'
           )
         }
       >
@@ -288,10 +288,10 @@ const Sidebar = () => {
           className={({ isActive }) =>
             cn(
               'flex items-center px-4 py-3 text-sm font-medium transition-colors duration-200',
-              'hover:bg-slate-700 rounded-lg mx-2',
+              'hover:bg-slate-700 dark:hover:bg-gray-700 rounded-lg mx-2',
               isActive
                 ? 'bg-emooti-blue-600 text-white'
-                : 'text-slate-300'
+                : 'text-slate-300 dark:text-gray-300'
             )
           }
         >
@@ -320,8 +320,8 @@ const Sidebar = () => {
           onClick={() => toggleGroup(group.id)}
           className={cn(
             'w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors duration-200',
-            'hover:bg-slate-700 rounded-lg mx-2',
-            hasActiveChild ? 'text-white' : 'text-slate-300'
+            'hover:bg-slate-700 dark:hover:bg-gray-700 rounded-lg mx-2',
+            hasActiveChild ? 'text-white' : 'text-slate-300 dark:text-gray-300'
           )}
         >
           <div className="flex items-center">
@@ -369,7 +369,7 @@ const Sidebar = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-700">
+      <div className="flex items-center justify-between p-4 border-b border-slate-700 dark:border-gray-700">
         {!sidebarCollapsed && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -385,12 +385,12 @@ const Sidebar = () => {
         
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="p-1 rounded-lg hover:bg-slate-700 transition-colors duration-200"
+          className="p-1 rounded-lg hover:bg-slate-700 dark:hover:bg-gray-700 transition-colors duration-200"
         >
           {sidebarCollapsed ? (
-            <ChevronRight className="w-5 h-5 text-slate-300" />
+            <ChevronRight className="w-5 h-5 text-slate-300 dark:text-gray-300" />
           ) : (
-            <ChevronLeft className="w-5 h-5 text-slate-300" />
+            <ChevronLeft className="w-5 h-5 text-slate-300 dark:text-gray-300" />
           )}
         </button>
       </div>
@@ -416,7 +416,7 @@ const Sidebar = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="p-4 border-t border-slate-700"
+          className="p-4 border-t border-slate-700 dark:border-gray-700"
         >
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-r from-emooti-green-400 to-emooti-green-500 rounded-full flex items-center justify-center">
@@ -428,7 +428,7 @@ const Sidebar = () => {
               <p className="text-sm font-medium text-white truncate">
                 {user?.fullName || 'Usuario'}
               </p>
-              <p className="text-xs text-slate-400 truncate">
+              <p className="text-xs text-slate-400 dark:text-gray-400 truncate">
                 {user?.userType || 'Usuario'}
               </p>
             </div>

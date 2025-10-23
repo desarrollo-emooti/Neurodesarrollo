@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Contexts
+import { ThemeProvider } from './contexts/ThemeContext';
+
 // Stores
 import useAuthStore from './store/authStore';
 import useAppStore from './store/appStore';
@@ -66,10 +69,11 @@ function App() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-          <AnimatePresence mode="wait">
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+            <AnimatePresence mode="wait">
             <Routes>
               {/* Public Routes */}
               <Route path="/auth/callback" element={<AuthCallback />} />
@@ -167,9 +171,10 @@ function App() {
           closeButton
           expand
         />
-      </Router>
-    </QueryClientProvider>
-  );
-}
+          </Router>
+        </QueryClientProvider>
+      </ThemeProvider>
+    );
+  }
 
 export default App;
