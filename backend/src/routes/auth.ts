@@ -120,6 +120,70 @@ const generateRefreshToken = (user: any) => {
   } as jwt.SignOptions);
 };
 
+/**
+ * @swagger
+ * /api/v1/auth/login:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Login con email y contraseña
+ *     description: Autentica un usuario usando email y contraseña, retorna JWT tokens
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: admin@emooti.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: admin123
+ *     responses:
+ *       200:
+ *         description: Login exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                     refreshToken:
+ *                       type: string
+ *                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         fullName:
+ *                           type: string
+ *                         userType:
+ *                           type: string
+ *       400:
+ *         description: Datos faltantes o inválidos
+ *       401:
+ *         description: Credenciales inválidas
+ *       429:
+ *         description: Demasiados intentos de login (rate limit: 5/15min)
+ */
 // Email/Password Login (with rate limiting)
 router.post('/login', loginLimiter, asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -243,6 +307,32 @@ router.get('/google/callback',
   })
 );
 
+/**
+ * @swagger
+ * /api/v1/auth/me:
+ *   get:
+ *     tags: [Authentication]
+ *     summary: Obtener usuario autenticado
+ *     description: Retorna los datos del usuario actualmente autenticado
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Datos del usuario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Token inválido o no proporcionado
+ *       403:
+ *         description: Cuenta inactiva
+ */
 // Get current user
 router.get('/me', asyncHandler(async (req: any, res: Response) => {
   try {
@@ -306,6 +396,34 @@ router.get('/me', asyncHandler(async (req: any, res: Response) => {
   }
 }));
 
+/**
+ * @swagger
+ * /api/v1/auth/refresh:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Refrescar token JWT
+ *     description: Genera un nuevo par de tokens usando un refresh token válido
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *     responses:
+ *       200:
+ *         description: Tokens renovados exitosamente
+ *       401:
+ *         description: Refresh token inválido o expirado
+ *       429:
+ *         description: Demasiados intentos (rate limit: 3/hora)
+ */
 // Refresh token (with rate limiting)
 router.post('/refresh', authLimiter, asyncHandler(async (req: Request, res: Response) => {
   try {

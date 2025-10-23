@@ -6,6 +6,8 @@ import compression from 'compression';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import passport from './config/passport';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -149,6 +151,23 @@ app.get('/health', (req, res) => {
       environment: process.env['NODE_ENV'] || 'development',
     },
   });
+});
+
+// Swagger API Documentation
+app.use(
+  '/api/v1/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'EMOOTI API Documentation',
+  })
+);
+
+// Swagger JSON endpoint
+app.get('/api/v1/docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
 });
 
 // API routes
