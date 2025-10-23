@@ -340,7 +340,7 @@ No había listeners para eventos `online`/`offline` del navegador.
 ### ISSUE #7: Falta sistema de notificaciones en tiempo real
 **Categoría:** Frontend/Backend - Features
 **Estado:** ✅ Resuelto (22 Oct 2025)
-**Resuelto en:** commit [pending]
+**Resuelto en:** commit 0d2b86f
 **Detectado:** Revisión de funcionalidades (22 Oct 2025)
 
 **Descripción:**
