@@ -589,7 +589,7 @@ No hay tests unitarios ni de integración:
 ### ISSUE #12: Sin manejo de carga de archivos pesados
 **Categoría:** Frontend/Backend - Files
 **Estado:** ✅ Resuelto (23 Oct 2025)
-**Resuelto en:** commit [pending]
+**Resuelto en:** commit 26a79c9
 **Detectado:** Revisión de funcionalidades (22 Oct 2025)
 
 **Descripción:**
