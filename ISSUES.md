@@ -292,7 +292,7 @@ if (status === 429) {
 ### ISSUE #6: Falta manejo de reconexión en pérdida de internet
 **Categoría:** Frontend - Network
 **Estado:** ✅ Resuelto (22 Oct 2025)
-**Resuelto en:** commit [pending]
+**Resuelto en:** commit aa56ca7
 **Detectado:** Testing End-to-End (22 Oct 2025)
 
 **Descripción:**
