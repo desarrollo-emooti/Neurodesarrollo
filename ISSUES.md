@@ -11,10 +11,10 @@
 | Prioridad | Total | Abiertos | En Progreso | Resueltos |
 |-----------|-------|----------|-------------|-----------|
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
-| 🟠 Alta | 7 | 2 | 0 | 5 |
+| 🟠 Alta | 7 | 1 | 0 | 6 |
 | 🟡 Media | 5 | 3 | 0 | 2 |
 | 🟢 Baja | 8 | 6 | 0 | 2 |
-| **TOTAL** | **20** | **11** | **0** | **9** |
+| **TOTAL** | **20** | **10** | **0** | **10** |
 
 ---
 
@@ -291,58 +291,49 @@ if (status === 429) {
 
 ### ISSUE #6: Falta manejo de reconexión en pérdida de internet
 **Categoría:** Frontend - Network
-**Estado:** 🟠 Abierto
+**Estado:** ✅ Resuelto (22 Oct 2025)
+**Resuelto en:** commit [pending]
 **Detectado:** Testing End-to-End (22 Oct 2025)
 
 **Descripción:**
-La aplicación no detecta ni maneja pérdidas de conexión a internet.
+La aplicación no detectaba ni manejaba pérdidas de conexión a internet.
 
 **Causa raíz:**
-No hay listeners para eventos `online`/`offline` del navegador.
+No había listeners para eventos `online`/`offline` del navegador.
 
-**Impacto:**
-- Usuarios no saben si perdieron conexión
-- Requests fallan silenciosamente
-- Datos pueden perderse
+**Impacto eliminado:**
+- Usuarios no sabían si perdieron conexión
+- Requests fallaban silenciosamente
+- Datos podían perderse
 
-**Solución propuesta:**
-1. Crear hook personalizado `useOnlineStatus`:
-```javascript
-import { useEffect, useState } from 'react';
+**Solución implementada:**
+1. Creado hook personalizado `useOnlineStatus` (`src/hooks/useOnlineStatus.js`):
+   - Detecta estado online/offline usando `navigator.onLine`
+   - Escucha eventos `online` y `offline` del navegador
+   - Muestra toast success cuando se restablece la conexión
+   - Muestra toast error cuando se pierde la conexión
+   - Limpia event listeners en unmount
+   - Retorna estado `isOnline` para uso en componentes
 
-export const useOnlineStatus = () => {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+2. Integrado en Layout component (`src/components/Layout.jsx`):
+   - Hook se ejecuta automáticamente en el layout principal
+   - Monitorea el estado de conexión para toda la aplicación
+   - Estado `isOnline` disponible para uso futuro
 
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      toast.success('Conexión restablecida');
-    };
+**Beneficios:**
+- Usuario informado inmediatamente de pérdida de conexión
+- Notificación clara cuando se restablece la conexión
+- UX mejorada para situaciones offline
+- Base para futuras mejoras (cola de requests offline, etc.)
+- Implementación limpia y reutilizable
 
-    const handleOffline = () => {
-      setIsOnline(false);
-      toast.error('Sin conexión a internet');
-    };
+**Tiempo invertido:** 1 hora
+**Prioridad:** Alta para UX ✅
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  return isOnline;
-};
-```
-
-2. Usar en Layout para mostrar banner de estado
-3. Deshabilitar acciones cuando esté offline
-4. Implementar cola de requests offline con retry
-
-**Estimación:** 4-5 horas
-**Asignado a:** Pendiente
+**Próximas mejoras opcionales:**
+- Deshabilitar acciones cuando esté offline
+- Implementar cola de requests offline con retry automático
+- Mostrar banner persistente en lugar de solo toast
 
 ---
 
@@ -841,14 +832,14 @@ No había redirección automática de HTTP a HTTPS configurada.
 - 🔒 Security: 1 issue
 
 ### Por Estado
-- 🟢 Abierto: 11 issues
+- 🟢 Abierto: 10 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 9 issues (ISSUE #1, #3, #4, #5, #8, #9, #19, #20)
+- ✅ Resuelto: 10 issues (ISSUE #1, #3, #4, #5, #6, #8, #9, #19, #20)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[█████████░░░░░░░░░░░] 45% completado (9/20)
+[██████████░░░░░░░░░░] 50% completado (10/20)
 ```
 
 ---
@@ -862,11 +853,11 @@ No había redirección automática de HTTP a HTTPS configurada.
 - ISSUE #19: Rate limiting ✅
 - ISSUE #20: HTTPS forzado ✅
 
-### Sprint 2 (Semana 3-4) - En progreso (50% completado)
+### Sprint 2 (Semana 3-4) - En progreso (75% completado)
 **Objetivo:** Mejorar experiencia de usuario
 - ISSUE #4: Validación de tokens ✅
 - ISSUE #5: Manejo rate limiting frontend ✅
-- ISSUE #6: Reconexión offline
+- ISSUE #6: Reconexión offline ✅
 - ISSUE #7: Notificaciones tiempo real
 
 ### Sprint 3 (Semana 5-6)

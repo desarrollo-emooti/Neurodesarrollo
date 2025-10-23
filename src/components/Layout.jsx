@@ -3,9 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import useAppStore from '../store/appStore';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 const Layout = ({ children }) => {
   const { sidebarOpen, sidebarCollapsed } = useAppStore();
+
+  // Monitor online/offline status
+  const isOnline = useOnlineStatus();
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50">
