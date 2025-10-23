@@ -12,9 +12,9 @@
 |-----------|-------|----------|-------------|-----------|
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
 | 🟠 Alta | 7 | 0 | 0 | 7 |
-| 🟡 Media | 5 | 3 | 0 | 2 |
+| 🟡 Media | 5 | 2 | 0 | 3 |
 | 🟢 Baja | 8 | 6 | 0 | 2 |
-| **TOTAL** | **20** | **9** | **0** | **12** |
+| **TOTAL** | **20** | **8** | **0** | **13** |
 
 ---
 
@@ -496,23 +496,55 @@ function App() {
 
 ### ISSUE #10: Sin documentación de API (Swagger/OpenAPI)
 **Categoría:** Backend - Documentation
-**Estado:** 🟡 Abierto
+**Estado:** ✅ Resuelto (23 Oct 2025)
+**Resuelto en:** commit b5a4bb8
 **Detectado:** Revisión de proyecto (22 Oct 2025)
 
 **Descripción:**
-No hay documentación interactiva de la API. Dificulta:
+No había documentación interactiva de la API. Dificultaba:
 - Onboarding de nuevos desarrolladores
 - Testing manual de endpoints
 - Integración con sistemas externos
 
-**Solución propuesta:**
-1. Instalar swagger-jsdoc y swagger-ui-express
-2. Añadir comentarios JSDoc a rutas
-3. Configurar endpoint `/api/v1/docs`
-4. Documentar schemas con ejemplos
+**Solución implementada:**
+1. Instaladas dependencias:
+   - `swagger-jsdoc` y `swagger-ui-express`
+   - `@types/swagger-jsdoc` y `@types/swagger-ui-express`
 
-**Estimación:** 8-10 horas (documentar 100+ endpoints)
-**Asignado a:** Pendiente
+2. Creado archivo de configuración `backend/src/config/swagger.ts`:
+   - Configuración OpenAPI 3.0
+   - Información del proyecto y contacto
+   - Servidores (desarrollo y producción)
+   - Esquemas de seguridad (Bearer JWT)
+   - Schemas comunes (Error, Success, User, Student, etc.)
+   - Tags por categorías de endpoints
+   - Información de autenticación y roles
+
+3. Integrado en `backend/src/index.ts`:
+   - Endpoint `/api/v1/docs` con Swagger UI interactivo
+   - Endpoint `/api/v1/docs.json` para obtener spec en JSON
+   - Custom CSS para ocultar topbar de Swagger
+   - Explorador de API habilitado
+
+4. Documentación JSDoc añadida a endpoints de autenticación:
+   - `POST /api/v1/auth/login` - Login con email/password
+   - `GET /api/v1/auth/me` - Obtener usuario autenticado
+   - `POST /api/v1/auth/refresh` - Refrescar tokens JWT
+
+**Beneficios:**
+- Documentación interactiva accesible desde el navegador
+- Testing de endpoints sin necesidad de Postman
+- Onboarding más rápido para nuevos desarrolladores
+- Schemas y ejemplos de request/response
+- Base extensible para documentar más endpoints
+
+**Próximos pasos opcionales:**
+- Documentar todos los endpoints restantes (users, students, etc.)
+- Añadir más ejemplos de responses
+- Documentar códigos de error específicos
+
+**Tiempo invertido:** 3 horas (configuración base + endpoints críticos)
+**Prioridad:** Media ✅
 
 ---
 
@@ -869,14 +901,14 @@ No había redirección automática de HTTP a HTTPS configurada.
 - 🔒 Security: 1 issue
 
 ### Por Estado
-- 🟢 Abierto: 8 issues
+- 🟢 Abierto: 7 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 12 issues (ISSUE #1, #2, #3, #4, #5, #6, #7, #8, #9, #19, #20)
+- ✅ Resuelto: 13 issues (ISSUE #1, #2, #3, #4, #5, #6, #7, #8, #9, #10, #19, #20)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[████████████░░░░░░░░] 60% completado (12/20)
+[█████████████░░░░░░░] 65% completado (13/20)
 ```
 
 ---
