@@ -120,12 +120,27 @@ api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
-    const { response } = error;
-    
+  async (error) => {
+    const { response, config } = error;
+
     if (response) {
       const { status, data } = response;
-      
+
+      // Handle rate limiting (429 Too Many Requests)
+      if (status === 429) {
+        // Get retry delay from header or default to 5 seconds
+        const retryAfter = parseInt(response.headers['retry-after']) || 5;
+
+        // Show user-friendly notification
+        toast.warning(`Demasiadas solicitudes. Reintentando en ${retryAfter}s...`);
+
+        // Wait for the specified delay
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+
+        // Retry the original request
+        return api.request(config);
+      }
+
       switch (status) {
         case 401:
           // Unauthorized - clear token and redirect to login
@@ -134,15 +149,15 @@ api.interceptors.response.use(
           window.location.href = '/login';
           toast.error('Sesión expirada. Por favor, inicia sesión nuevamente.');
           break;
-          
+
         case 403:
           toast.error('No tienes permisos para realizar esta acción.');
           break;
-          
+
         case 404:
           toast.error('Recurso no encontrado.');
           break;
-          
+
         case 422:
           // Validation errors
           if (data.error?.details) {
@@ -153,11 +168,11 @@ api.interceptors.response.use(
             toast.error(data.error?.message || 'Error de validación.');
           }
           break;
-          
+
         case 500:
           toast.error('Error interno del servidor. Por favor, intenta más tarde.');
           break;
-          
+
         default:
           toast.error(data.error?.message || 'Ha ocurrido un error inesperado.');
       }
@@ -168,7 +183,7 @@ api.interceptors.response.use(
       // Other error
       toast.error('Ha ocurrido un error inesperado.');
     }
-    
+
     return Promise.reject(error);
   }
 );

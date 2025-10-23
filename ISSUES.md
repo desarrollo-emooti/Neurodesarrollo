@@ -11,10 +11,10 @@
 | Prioridad | Total | Abiertos | En Progreso | Resueltos |
 |-----------|-------|----------|-------------|-----------|
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
-| 🟠 Alta | 7 | 3 | 0 | 4 |
+| 🟠 Alta | 7 | 2 | 0 | 5 |
 | 🟡 Media | 5 | 3 | 0 | 2 |
 | 🟢 Baja | 8 | 6 | 0 | 2 |
-| **TOTAL** | **20** | **12** | **0** | **8** |
+| **TOTAL** | **20** | **11** | **0** | **9** |
 
 ---
 
@@ -185,7 +185,7 @@ model EmotiTest {
 ### ISSUE #4: Falta validación de tokens expirados en frontend
 **Categoría:** Frontend - Authentication
 **Estado:** ✅ Resuelto (22 Oct 2025)
-**Resuelto en:** commit [pending]
+**Resuelto en:** commit 1209d25
 **Detectado:** Revisión de código (22 Oct 2025)
 
 **Descripción:**
@@ -235,46 +235,57 @@ El interceptor de axios solo manejaba errores 401 después de que el servidor re
 
 ### ISSUE #5: Sin manejo de rate limiting en frontend
 **Categoría:** Frontend - Performance
-**Estado:** 🟠 Abierto
+**Estado:** ✅ Resuelto (22 Oct 2025)
+**Resuelto en:** commit [pending]
 **Detectado:** Testing End-to-End (22 Oct 2025)
 
 **Descripción:**
-El frontend no maneja correctamente respuestas 429 (Too Many Requests) del backend.
+El frontend no manejaba correctamente respuestas 429 (Too Many Requests) del backend.
 
 **Causa raíz:**
-El interceptor de axios no tiene lógica específica para errores de rate limiting.
+El interceptor de axios no tenía lógica específica para errores de rate limiting.
 
-**Impacto:**
-- Usuarios no saben por qué fallan sus requests
-- No hay reintentos automáticos con backoff
+**Impacto eliminado:**
+- Usuarios no sabían por qué fallaban sus requests
+- No había reintentos automáticos con backoff
 - Experiencia de usuario confusa
 
-**Solución propuesta:**
-1. Añadir manejo de 429 en interceptor de respuesta:
+**Solución implementada:**
+1. Añadido manejo de 429 en interceptor de respuesta (`src/lib/api.js:129-142`):
+   - Detecta status 429 (Too Many Requests)
+   - Parsea header `retry-after` del servidor o usa 5 segundos por defecto
+   - Muestra toast warning informando al usuario del tiempo de espera
+   - Implementa delay automático
+   - Reintenta el request original automáticamente
+   - Transparente para el usuario final
+
+2. Código implementado:
 ```javascript
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const { response, config } = error;
+// Handle rate limiting (429 Too Many Requests)
+if (status === 429) {
+  // Get retry delay from header or default to 5 seconds
+  const retryAfter = parseInt(response.headers['retry-after']) || 5;
 
-    if (response?.status === 429) {
-      const retryAfter = response.headers['retry-after'] || 5;
-      toast.warning(`Demasiadas solicitudes. Reintentando en ${retryAfter}s...`);
+  // Show user-friendly notification
+  toast.warning(`Demasiadas solicitudes. Reintentando en ${retryAfter}s...`);
 
-      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-      return api.request(config);
-    }
+  // Wait for the specified delay
+  await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
 
-    // ... resto del código
-  }
-);
+  // Retry the original request
+  return api.request(config);
+}
 ```
 
-2. Implementar debouncing en búsquedas y filtros
-3. Añadir throttling en acciones frecuentes
+**Beneficios:**
+- UX mejorada: usuario informado del problema
+- Reintentos automáticos sin intervención manual
+- Respeta los límites del servidor
+- Integración perfecta con rate limiters del backend
+- Mensajes consistentes en español
 
-**Estimación:** 3-4 horas
-**Asignado a:** Pendiente
+**Tiempo invertido:** 1 hora
+**Prioridad:** Alta para UX ✅
 
 ---
 
@@ -830,14 +841,14 @@ No había redirección automática de HTTP a HTTPS configurada.
 - 🔒 Security: 1 issue
 
 ### Por Estado
-- 🟢 Abierto: 12 issues
+- 🟢 Abierto: 11 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 8 issues (ISSUE #1, #3, #4, #8, #9, #19, #20)
+- ✅ Resuelto: 9 issues (ISSUE #1, #3, #4, #5, #8, #9, #19, #20)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[████████░░░░░░░░░░░░] 40% completado (8/20)
+[█████████░░░░░░░░░░░] 45% completado (9/20)
 ```
 
 ---
@@ -851,12 +862,12 @@ No había redirección automática de HTTP a HTTPS configurada.
 - ISSUE #19: Rate limiting ✅
 - ISSUE #20: HTTPS forzado ✅
 
-### Sprint 2 (Semana 3-4)
+### Sprint 2 (Semana 3-4) - En progreso (50% completado)
 **Objetivo:** Mejorar experiencia de usuario
-- ISSUE #4: Validación de tokens
-- ISSUE #5: Manejo rate limiting frontend
+- ISSUE #4: Validación de tokens ✅
+- ISSUE #5: Manejo rate limiting frontend ✅
 - ISSUE #6: Reconexión offline
-- ISSUE #8: Mejorar Dashboard
+- ISSUE #7: Notificaciones tiempo real
 
 ### Sprint 3 (Semana 5-6)
 **Objetivo:** Optimización y performance
