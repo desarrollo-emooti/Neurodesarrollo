@@ -236,7 +236,7 @@ El interceptor de axios solo manejaba errores 401 después de que el servidor re
 ### ISSUE #5: Sin manejo de rate limiting en frontend
 **Categoría:** Frontend - Performance
 **Estado:** ✅ Resuelto (22 Oct 2025)
-**Resuelto en:** commit [pending]
+**Resuelto en:** commit b0bb5f6
 **Detectado:** Testing End-to-End (22 Oct 2025)
 
 **Descripción:**
