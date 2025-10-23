@@ -551,7 +551,7 @@ No había documentación interactiva de la API. Dificultaba:
 ### ISSUE #11: Sin tests automatizados
 **Categoría:** Testing
 **Estado:** ✅ Resuelto (23 Oct 2025) - Fase 1 completada
-**Resuelto en:** commit [pending]
+**Resuelto en:** commit 11b30e7
 **Detectado:** Revisión de proyecto (22 Oct 2025)
 
 **Descripción:**
