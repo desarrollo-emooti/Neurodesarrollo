@@ -87,7 +87,7 @@ model FamilyStudent {
 ### ISSUE #2: Módulos Backend marcados como NOT_IMPLEMENTED
 **Categoría:** Backend - Módulos
 **Estado:** ✅ Resuelto (23 Oct 2025)
-**Resuelto en:** commit [pending]
+**Resuelto en:** commit 8ca65b6
 **Detectado:** Revisión de código (22 Oct 2025)
 
 **Descripción:**
