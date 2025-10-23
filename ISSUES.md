@@ -14,7 +14,7 @@
 | 🟠 Alta | 7 | 0 | 0 | 7 |
 | 🟡 Media | 5 | 3 | 0 | 2 |
 | 🟢 Baja | 8 | 6 | 0 | 2 |
-| **TOTAL** | **20** | **9** | **0** | **11** |
+| **TOTAL** | **20** | **9** | **0** | **12** |
 
 ---
 
@@ -86,44 +86,63 @@ model FamilyStudent {
 
 ### ISSUE #2: Módulos Backend marcados como NOT_IMPLEMENTED
 **Categoría:** Backend - Módulos
-**Estado:** 🟠 Abierto
+**Estado:** ✅ Resuelto (23 Oct 2025)
+**Resuelto en:** commit [pending]
 **Detectado:** Revisión de código (22 Oct 2025)
 
 **Descripción:**
-7 módulos del backend están marcados como `NOT_IMPLEMENTED` y retornan error 501:
+6 módulos del backend estaban marcados como `NOT_IMPLEMENTED` y retornaban error 501:
 1. Authorizations (`/api/v1/authorizations`)
 2. Tutorials (`/api/v1/tutorials`)
 3. Reports (`/api/v1/reports`)
 4. Database (`/api/v1/database`)
 5. Export (`/api/v1/export`)
 6. Import (`/api/v1/import`)
-7. EmotiTests (`/api/v1/emoti-tests`)
 
 **Causa raíz:**
-Estos módulos no están implementados en el backend pero sí están configurados en las rutas del frontend.
+Estos módulos no estaban implementados en el backend pero sí estaban configurados en las rutas del frontend.
 
-**Impacto:**
-- Usuarios ven opciones en el menú que no funcionan
+**Impacto eliminado:**
+- Usuarios veían opciones en el menú que no funcionaban
 - Experiencia de usuario confusa
 - Errores 501 en consola del navegador
 
-**Solución propuesta (Opción 1 - Implementar):**
-Implementar los módulos siguiendo el patrón establecido:
-- Crear modelos en Prisma schema
-- Crear rutas en backend
-- Crear páginas y componentes en frontend
+**Solución implementada (Opción 2 - Remover):**
+Decidido remover los módulos no implementados por no ser críticos para el MVP:
 
-**Solución propuesta (Opción 2 - Remover):**
-Si no son necesarios para el MVP:
-- Eliminar rutas del frontend (`src/App.jsx`)
-- Eliminar opciones del menú (`src/components/Sidebar.jsx`)
-- Eliminar archivos de rutas del backend
+1. Backend (`backend/src/index.ts`):
+   - Removidos imports de módulos NOT_IMPLEMENTED
+   - Removidas rutas de API: authorizations, tutorials, reports, database, export, import
+   - Eliminados archivos de rutas: 6 archivos .ts eliminados
 
-**Estimación (Implementar):** 20-30 horas (todos los módulos)
-**Estimación (Remover):** 2-3 horas
-**Asignado a:** Pendiente - Requiere decisión de producto
-**Referencias:**
-- PROJECT_STATUS.md - Sección "Módulos No Implementados"
+2. Frontend (`src/components/Sidebar.jsx`):
+   - Removido "Exportar Usuarios" de menú Gestión de Usuarios
+   - Removido "Import. Automática" y "Import. Manual" de Gestión de Pruebas
+   - Removido "Informes" de Reportes y Análisis
+   - Removido "Bases de Datos" de Configuración
+   - Removido menú completo "Tutoriales"
+
+3. Frontend (`src/App.jsx`):
+   - Removidos lazy imports de páginas NOT_IMPLEMENTED
+   - Removidas rutas: /authorizations, /export, /import, /tutorials, /reports, /database
+
+4. Páginas eliminadas (`src/pages/`):
+   - Authorizations.jsx
+   - Export.jsx
+   - Import.jsx
+   - Tutorials.jsx
+   - Reports.jsx
+   - Database.jsx
+
+**Beneficios:**
+- Menú más limpio y enfocado en funcionalidades implementadas
+- No más errores 501 en consola
+- UX mejorada: usuarios solo ven opciones funcionales
+- Código más mantenible (menos archivos vacíos)
+- Bundle size reducido
+
+**Tiempo invertido:** 2 horas
+**Decisión:** Remover en lugar de implementar para acelerar MVP
 
 ---
 
@@ -850,14 +869,14 @@ No había redirección automática de HTTP a HTTPS configurada.
 - 🔒 Security: 1 issue
 
 ### Por Estado
-- 🟢 Abierto: 9 issues
+- 🟢 Abierto: 8 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 11 issues (ISSUE #1, #3, #4, #5, #6, #7, #8, #9, #19, #20)
+- ✅ Resuelto: 12 issues (ISSUE #1, #2, #3, #4, #5, #6, #7, #8, #9, #19, #20)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[███████████░░░░░░░░░] 55% completado (11/20)
+[████████████░░░░░░░░] 60% completado (12/20)
 ```
 
 ---
@@ -897,7 +916,6 @@ No había redirección automática de HTTP a HTTPS configurada.
 - ISSUE #13: Dark mode
 - ISSUE #14: i18n
 - ISSUE #15: PWA
-- ISSUE #2: Módulos NOT_IMPLEMENTED (decisión de producto)
 
 ---
 

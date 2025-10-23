@@ -23,13 +23,7 @@ import invoiceRoutes from './routes/invoices';
 import securityRoutes from './routes/security';
 import rgpdRoutes from './routes/rgpd';
 import configurationRoutes from './routes/configuration';
-import authorizationRoutes from './routes/authorizations';
-import exportRoutes from './routes/export';
-import importRoutes from './routes/import';
-import tutorialRoutes from './routes/tutorials';
-import reportRoutes from './routes/reports';
 import statisticsRoutes from './routes/statistics';
-import databaseRoutes from './routes/database';
 import profileRoutes from './routes/profile';
 import publicRoutes from './routes/public';
 
@@ -173,13 +167,7 @@ app.use(`/api/${API_VERSION}/invoices`, invoiceRoutes);
     app.use(`/api/${API_VERSION}/security`, securityRoutes);
     app.use(`/api/${API_VERSION}/rgpd`, rgpdRoutes);
 app.use(`/api/${API_VERSION}/configuration`, configurationRoutes);
-app.use(`/api/${API_VERSION}/authorizations`, authorizationRoutes);
-app.use(`/api/${API_VERSION}/export`, exportRoutes);
-app.use(`/api/${API_VERSION}/import`, importRoutes);
-app.use(`/api/${API_VERSION}/tutorials`, tutorialRoutes);
-app.use(`/api/${API_VERSION}/reports`, reportRoutes);
 app.use(`/api/${API_VERSION}/statistics`, statisticsRoutes);
-app.use(`/api/${API_VERSION}/database`, databaseRoutes);
 app.use(`/api/${API_VERSION}/profile`, profileRoutes);
 
 // Public test endpoint (no authentication required) - Apply stricter rate limiting

@@ -94,12 +94,6 @@ const Sidebar = () => {
             icon: Building2,
             roles: ['ADMINISTRADOR'],
           },
-          {
-            title: 'Exportar Usuarios',
-            href: '/export',
-            icon: Download,
-            roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-          },
         ],
       },
       {
@@ -125,18 +119,6 @@ const Sidebar = () => {
             href: '/student-history',
             icon: History,
             roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-          },
-          {
-            title: 'Import. Automática',
-            href: '/auto-import',
-            icon: Upload,
-            roles: ['ADMINISTRADOR'],
-          },
-          {
-            title: 'Import. Manual',
-            href: '/import',
-            icon: Upload,
-            roles: ['ADMINISTRADOR'],
           },
         ],
       },
@@ -207,12 +189,6 @@ const Sidebar = () => {
             roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
           },
           {
-            title: 'Informes',
-            href: '/reports',
-            icon: FileBarChart,
-            roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR'],
-          },
-          {
             title: 'Pruebas',
             href: '/test-reports',
             icon: Brain,
@@ -258,21 +234,7 @@ const Sidebar = () => {
             icon: Brain,
             roles: ['ADMINISTRADOR', 'CLINICA', 'EXAMINADOR'],
           },
-          {
-            title: 'Bases de Datos',
-            href: '/database',
-            icon: Database,
-            roles: ['ADMINISTRADOR'],
-          },
         ],
-      },
-      {
-        id: 'tutorials',
-        title: 'Tutoriales',
-        icon: BookOpen,
-        href: '/tutorials',
-        roles: ['ADMINISTRADOR', 'CLINICA', 'ORIENTADOR', 'EXAMINADOR', 'FAMILIA'],
-        single: true,
       },
     ].filter(group => group.roles.includes(user?.userType));
   };

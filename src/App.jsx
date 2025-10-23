@@ -32,13 +32,7 @@ const Subscriptions = lazy(() => import('./pages/Subscriptions'));
 const Invoices = lazy(() => import('./pages/Invoices'));
 const Security = lazy(() => import('./pages/Security'));
 const Configuration = lazy(() => import('./pages/Configuration'));
-const Authorizations = lazy(() => import('./pages/Authorizations'));
-const Export = lazy(() => import('./pages/Export'));
-const Import = lazy(() => import('./pages/Import'));
-const Tutorials = lazy(() => import('./pages/Tutorials'));
-const Reports = lazy(() => import('./pages/Reports'));
 const Statistics = lazy(() => import('./pages/Statistics'));
-const Database = lazy(() => import('./pages/Database'));
 const Profile = lazy(() => import('./pages/Profile'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -140,24 +134,12 @@ function App() {
 
                           {/* Security & Compliance */}
                           <Route path="/security" element={<Security />} />
-                          <Route path="/authorizations" element={<Authorizations />} />
 
                           {/* Configuration */}
                           <Route path="/configuration" element={<Configuration />} />
 
-                          {/* Data Management */}
-                          <Route path="/export" element={<Export />} />
-                          <Route path="/import" element={<Import />} />
-
-                          {/* Help & Support */}
-                          <Route path="/tutorials" element={<Tutorials />} />
-
                           {/* Reports & Analytics */}
-                          <Route path="/reports" element={<Reports />} />
                           <Route path="/statistics" element={<Statistics />} />
-
-                          {/* Admin Only */}
-                          <Route path="/database" element={<Database />} />
 
                           {/* Profile */}
                           <Route path="/profile" element={<Profile />} />
