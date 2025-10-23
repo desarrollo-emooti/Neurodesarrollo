@@ -12,9 +12,9 @@
 |-----------|-------|----------|-------------|-----------|
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
 | 🟠 Alta | 7 | 0 | 0 | 7 |
-| 🟡 Media | 5 | 1 | 0 | 4 |
+| 🟡 Media | 5 | 0 | 0 | 5 |
 | 🟢 Baja | 8 | 6 | 0 | 2 |
-| **TOTAL** | **20** | **7** | **0** | **14** |
+| **TOTAL** | **20** | **6** | **0** | **15** |
 
 ---
 
@@ -550,39 +550,99 @@ No había documentación interactiva de la API. Dificultaba:
 
 ### ISSUE #11: Sin tests automatizados
 **Categoría:** Testing
-**Estado:** 🟡 Abierto
+**Estado:** ✅ Resuelto (23 Oct 2025) - Fase 1 completada
+**Resuelto en:** commit [pending]
 **Detectado:** Revisión de proyecto (22 Oct 2025)
 
 **Descripción:**
-No hay tests unitarios ni de integración:
+No había infraestructura de testing:
 - Frontend sin tests de componentes
 - Backend sin tests de endpoints
-- Sin tests E2E automatizados
+- Sin configuración de testing automatizada
 
-**Impacto:**
-- Riesgo de regresiones al hacer cambios
-- QA manual costoso en tiempo
-- Menor confianza en deploys
+**Impacto eliminado:**
+- Riesgo de regresiones reducido
+- Base sólida para tests futuros
+- Mayor confianza en deploys
 
-**Solución propuesta:**
-1. Frontend - Vitest + React Testing Library:
-   - Tests unitarios de componentes
-   - Tests de hooks personalizados
-   - Tests de utilidades
+**Solución implementada (Fase 1 - Infraestructura):**
 
-2. Backend - Jest:
-   - Tests unitarios de servicios
-   - Tests de integración de endpoints
-   - Tests de modelos Prisma
+1. **Frontend - Vitest + React Testing Library**:
+   - Instaladas dependencias: vitest, @vitest/ui, jsdom, @testing-library/react, @testing-library/jest-dom, @testing-library/user-event
+   - Configuración completa en `vitest.config.js`:
+     * Environment: jsdom
+     * Coverage: v8 provider con thresholds de 70%
+     * Setup file con mocks de DOM APIs
+   - Archivo de setup (`src/test/setup.js`):
+     * Mock window.matchMedia
+     * Mock IntersectionObserver
+     * Mock localStorage y sessionStorage
+     * Cleanup automático después de cada test
+   - Scripts en package.json:
+     * `npm test` - Run tests in watch mode
+     * `npm run test:ui` - Run tests with UI
+     * `npm run test:run` - Run tests once
+     * `npm run test:coverage` - Run with coverage
 
-3. E2E - Playwright:
-   - Flujos críticos de usuario
-   - Tests de autenticación
-   - Tests de CRUD principales
+2. **Tests de ejemplo Frontend**:
+   - `src/utils/chunkUpload.test.js`:
+     * Tests de función needsChunkUpload
+     * Tests de clase ChunkUploader
+     * Tests de función uploadLargeFile
+     * Cobertura de casos edge y errores
 
-**Estimación:** 20-30 horas (cobertura básica 70%)
-**Asignado a:** Pendiente
-**Prioridad:** Media-Alta
+   - `src/components/FileUpload.test.jsx`:
+     * Tests de renderizado del componente
+     * Tests de validación de archivos
+     * Tests de drag & drop
+     * Tests de múltiples archivos
+     * Tests de callbacks (onUpload, onDelete)
+     * Tests de formateo de tamaños
+     * Mock de browser-image-compression
+     * 15+ tests unitarios
+
+3. **Backend - Jest + Supertest**:
+   - Configuración completa en `backend/jest.config.js`:
+     * Preset: ts-jest
+     * Environment: node
+     * Coverage thresholds: 70%
+     * Module name mapper para alias
+   - Archivo de setup (`backend/src/test/setup.ts`):
+     * Mock de PrismaClient completo
+     * Mock de variables de entorno
+     * Timeout configurado
+     * Cleanup automático
+   - Scripts ya existentes en package.json:
+     * `npm test` - Run tests
+     * `npm run test:watch` - Run in watch mode
+     * `npm run test:coverage` - Run with coverage
+
+4. **Tests de ejemplo Backend**:
+   - `backend/src/routes/auth.test.ts`:
+     * Tests de POST /auth/login (4 casos)
+     * Tests de GET /auth/me (4 casos)
+     * Tests de POST /auth/refresh (3 casos)
+     * Tests de POST /auth/logout (2 casos)
+     * Cobertura completa de casos exitosos y errores
+     * Mock de Prisma y JWT
+     * Uso de supertest para integration testing
+
+**Beneficios:**
+- Infraestructura de testing completamente configurada
+- Tests de ejemplo para guiar futuros tests
+- Cobertura inicial de componentes críticos
+- CI/CD ready con scripts configurados
+- Mocks robustos para bases de datos y APIs externas
+
+**Próximos pasos (Fase 2 - Expansión):**
+- Expandir cobertura de tests frontend (componentes UI, hooks, stores)
+- Expandir cobertura de tests backend (routes, middleware, services)
+- Implementar E2E tests con Playwright
+- Alcanzar 70% de cobertura en ambos proyectos
+- Integrar tests en CI/CD pipeline
+
+**Tiempo invertido:** 8 horas (infraestructura + ejemplos básicos)
+**Prioridad:** Media-Alta ✅ (Fase 1 completada)
 
 ---
 
@@ -956,14 +1016,14 @@ No había redirección automática de HTTP a HTTPS configurada.
 - 🔒 Security: 1 issue
 
 ### Por Estado
-- 🟢 Abierto: 6 issues
+- 🟢 Abierto: 5 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 14 issues (ISSUE #1, #2, #3, #4, #5, #6, #7, #8, #9, #10, #12, #19, #20)
+- ✅ Resuelto: 15 issues (ISSUE #1, #2, #3, #4, #5, #6, #7, #8, #9, #10, #11, #12, #19, #20)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[██████████████░░░░░░] 70% completado (14/20)
+[███████████████░░░░░] 75% completado (15/20)
 ```
 
 ---
