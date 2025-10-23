@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import dotenv from 'dotenv';
+import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import passport from './config/passport';
 import swaggerUi from 'swagger-ui-express';
@@ -28,6 +29,7 @@ import configurationRoutes from './routes/configuration';
 import statisticsRoutes from './routes/statistics';
 import profileRoutes from './routes/profile';
 import publicRoutes from './routes/public';
+import uploadRoutes from './routes/uploads';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -188,9 +190,13 @@ app.use(`/api/${API_VERSION}/invoices`, invoiceRoutes);
 app.use(`/api/${API_VERSION}/configuration`, configurationRoutes);
 app.use(`/api/${API_VERSION}/statistics`, statisticsRoutes);
 app.use(`/api/${API_VERSION}/profile`, profileRoutes);
+app.use(`/api/${API_VERSION}/uploads`, uploadRoutes);
 
 // Public test endpoint (no authentication required) - Apply stricter rate limiting
 app.use('/api/public', publicLimiter, publicRoutes);
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // 404 handler
 app.use('*', (req, res) => {

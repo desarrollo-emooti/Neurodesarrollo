@@ -12,9 +12,9 @@
 |-----------|-------|----------|-------------|-----------|
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
 | 🟠 Alta | 7 | 0 | 0 | 7 |
-| 🟡 Media | 5 | 2 | 0 | 3 |
+| 🟡 Media | 5 | 1 | 0 | 4 |
 | 🟢 Baja | 8 | 6 | 0 | 2 |
-| **TOTAL** | **20** | **8** | **0** | **13** |
+| **TOTAL** | **20** | **7** | **0** | **14** |
 
 ---
 
@@ -588,15 +588,16 @@ No hay tests unitarios ni de integración:
 
 ### ISSUE #12: Sin manejo de carga de archivos pesados
 **Categoría:** Frontend/Backend - Files
-**Estado:** 🟡 Abierto
+**Estado:** ✅ Resuelto (23 Oct 2025)
+**Resuelto en:** commit [pending]
 **Detectado:** Revisión de funcionalidades (22 Oct 2025)
 
 **Descripción:**
-No hay:
-- Validación de tamaño de archivos
-- Progress bars para uploads
-- Compresión de imágenes
-- Chunk uploads para archivos grandes
+No había sistema robusto para carga de archivos:
+- Sin validación de tamaño de archivos
+- Sin progress bars para uploads
+- Sin compresión de imágenes
+- Sin chunk uploads para archivos grandes
 
 **Ubicaciones afectadas:**
 - Users (documentos, fotos)
@@ -604,14 +605,68 @@ No hay:
 - Centers (contratos)
 - Invoices (adjuntos)
 
-**Solución propuesta:**
-1. Añadir validación de tamaño en frontend (max 10MB)
-2. Implementar componente FileUpload con progress
-3. Añadir compresión de imágenes con browser-image-compression
-4. Para archivos >50MB implementar chunk upload con resumable.js
+**Solución implementada:**
 
-**Estimación:** 6-8 horas
-**Asignado a:** Pendiente
+1. **Componente FileUpload reutilizable** (`src/components/FileUpload.jsx`):
+   - Validación de tamaño configurable (default 10MB)
+   - Validación de tipos de archivo con whitelist
+   - Progress bar animado durante la carga
+   - Compresión automática de imágenes con browser-image-compression
+   - Preview de imágenes subidas
+   - Drag & drop support
+   - Soporte para múltiples archivos
+   - Lista de archivos subidos con opciones de eliminar
+   - UI limpia y responsive con Tailwind CSS
+
+2. **Utilidad de Chunk Upload** (`src/utils/chunkUpload.js`):
+   - Clase ChunkUploader para archivos grandes (>50MB)
+   - División automática en chunks de 5MB
+   - Upload paralelo de chunks (3 concurrent por defecto)
+   - Reintentos automáticos con backoff exponencial
+   - Progress tracking detallado (chunks, bytes, percentage)
+   - Soporte para cancelación y reanudación
+   - Helper function `uploadLargeFile()` para uso simple
+
+3. **Endpoints de Backend** (`backend/src/routes/uploads.ts`):
+   - `POST /api/v1/uploads` - Upload normal (hasta 10MB)
+   - `POST /api/v1/uploads/chunk/init` - Inicializar chunk upload
+   - `POST /api/v1/uploads/chunk` - Subir chunk individual
+   - `POST /api/v1/uploads/chunk/finalize` - Ensamblar chunks
+   - `POST /api/v1/uploads/chunk/abort` - Cancelar upload
+   - Configuración de multer para uploads y chunks
+   - Gestión automática de directorios (uploads/, temp/, chunks/)
+   - Metadata tracking para cada upload
+   - Limpieza automática de archivos temporales
+
+4. **Integración en Backend** (`backend/src/index.ts`):
+   - Ruta `/api/v1/uploads` registrada
+   - Static files servidos desde `/uploads`
+   - Directorio uploads/ excluido de git
+
+5. **Características técnicas:**
+   - Compresión de imágenes: reduce a máx 1MB manteniendo calidad
+   - Chunk size: 5MB por chunk
+   - Parallel uploads: 3 chunks simultáneos
+   - Max retries: 3 intentos por chunk
+   - Tipos permitidos: jpeg, jpg, png, gif, pdf, doc, docx, xls, xlsx
+   - Nombres únicos: timestamp + UUID para evitar colisiones
+
+**Beneficios:**
+- UX mejorada con progress bars y feedback visual
+- Uploads más rápidos con compresión de imágenes
+- Soporte para archivos muy grandes sin timeouts
+- Sistema robusto con reintentos automáticos
+- Componente reutilizable para toda la aplicación
+- Backend escalable con chunk processing
+
+**Próximos pasos opcionales:**
+- Integrar FileUpload en Users, Students, Centers
+- Añadir validación de virus/malware con ClamAV
+- Implementar almacenamiento en cloud (S3/Azure)
+- Añadir thumbnails automáticos para imágenes
+
+**Tiempo invertido:** 6 horas
+**Prioridad:** Media ✅
 
 ---
 
@@ -901,14 +956,14 @@ No había redirección automática de HTTP a HTTPS configurada.
 - 🔒 Security: 1 issue
 
 ### Por Estado
-- 🟢 Abierto: 7 issues
+- 🟢 Abierto: 6 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 13 issues (ISSUE #1, #2, #3, #4, #5, #6, #7, #8, #9, #10, #19, #20)
+- ✅ Resuelto: 14 issues (ISSUE #1, #2, #3, #4, #5, #6, #7, #8, #9, #10, #12, #19, #20)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[█████████████░░░░░░░] 65% completado (13/20)
+[██████████████░░░░░░] 70% completado (14/20)
 ```
 
 ---

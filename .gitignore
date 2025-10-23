@@ -234,6 +234,7 @@ backend/_ul
 backend/fix-*.js
 backend/fix_errors.sh
 backend/migration.sql
+backend/uploads/
 nul
 
 # Prisma
