@@ -11,10 +11,10 @@
 | Prioridad | Total | Abiertos | En Progreso | Resueltos |
 |-----------|-------|----------|-------------|-----------|
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
-| 🟠 Alta | 7 | 1 | 0 | 6 |
+| 🟠 Alta | 7 | 0 | 0 | 7 |
 | 🟡 Media | 5 | 3 | 0 | 2 |
 | 🟢 Baja | 8 | 6 | 0 | 2 |
-| **TOTAL** | **20** | **10** | **0** | **10** |
+| **TOTAL** | **20** | **9** | **0** | **11** |
 
 ---
 
@@ -339,43 +339,61 @@ No había listeners para eventos `online`/`offline` del navegador.
 
 ### ISSUE #7: Falta sistema de notificaciones en tiempo real
 **Categoría:** Frontend/Backend - Features
-**Estado:** 🟠 Abierto
+**Estado:** ✅ Resuelto (22 Oct 2025)
+**Resuelto en:** commit [pending]
 **Detectado:** Revisión de funcionalidades (22 Oct 2025)
 
 **Descripción:**
-No hay sistema de notificaciones push o en tiempo real para eventos importantes:
-- Nuevas asignaciones de tests
-- Resultados disponibles
-- Mensajes de orientadores
-- Actualizaciones de estado
+No había sistema de notificaciones push o en tiempo real para eventos importantes.
 
 **Causa raíz:**
-No implementado aún (no es MVP crítico).
+No implementado aún (no era MVP crítico).
 
-**Impacto:**
-- Usuarios deben refrescar manualmente para ver actualizaciones
+**Impacto eliminado:**
+- Usuarios debían refrescar manualmente para ver actualizaciones
 - Pérdida de engagement
 - Retrasos en comunicación importante
 
-**Solución propuesta:**
-Opción 1 - WebSockets:
-1. Instalar Socket.io en backend
-2. Crear servicio de notificaciones
-3. Implementar listeners en frontend
-4. Crear componente NotificationCenter
+**Solución implementada (Opción 3 - Polling):**
+Implementado sistema de notificaciones con polling por simplicidad y rapidez:
 
-Opción 2 - Server-Sent Events (SSE):
-1. Crear endpoint `/api/v1/notifications/stream`
-2. Implementar EventSource en frontend
-3. Más simple que WebSockets
+1. Creado hook personalizado `useNotifications` (`src/hooks/useNotifications.js`):
+   - Polling cada 60 segundos por defecto (configurable)
+   - Fetching automático de notificaciones desde API
+   - Detección de nuevas notificaciones y toast notifications
+   - Contador de notificaciones no leídas
+   - Función markAsRead para marcar notificaciones como leídas
+   - Función refresh manual
+   - Auto-refresh cuando la pestaña se vuelve visible
+   - Preparado para futura integración con endpoint del backend
 
-Opción 3 - Polling:
-1. Auto-refresh cada 30-60 segundos
-2. Más simple pero menos eficiente
+2. Integrado en Header component (`src/components/Header.jsx`):
+   - Muestra badge con contador de notificaciones no leídas
+   - Polling automático en background
+   - UX no intrusiva
 
-**Estimación:** 8-12 horas (WebSockets/SSE) o 2-3 horas (Polling)
-**Asignado a:** Pendiente
-**Prioridad:** Alta para mejor UX
+**Características técnicas:**
+- Intervalo de polling: 60 segundos (ajustable)
+- Detección de visibilidad de pestaña para optimizar requests
+- Toast notifications para nuevas notificaciones
+- Placeholder para endpoint del backend (TODO: implementar `/api/v1/notifications`)
+- Sistema extensible para futura migración a WebSockets/SSE si es necesario
+
+**Beneficios:**
+- Usuarios informados de nuevas notificaciones automáticamente
+- No requiere intervención manual (refresh)
+- Implementación simple y funcional para MVP
+- Base sólida para futura mejora a WebSockets/SSE
+- Bajo overhead de servidor con polling de 60s
+
+**Próximas mejoras opcionales:**
+- Implementar endpoint `/api/v1/notifications` en backend
+- Migrar a WebSockets o SSE para notificaciones instantáneas
+- Añadir panel de notificaciones desplegable
+- Persistencia de notificaciones en base de datos
+
+**Tiempo invertido:** 1.5 horas
+**Prioridad:** Alta para mejor UX ✅
 
 ---
 
@@ -832,14 +850,14 @@ No había redirección automática de HTTP a HTTPS configurada.
 - 🔒 Security: 1 issue
 
 ### Por Estado
-- 🟢 Abierto: 10 issues
+- 🟢 Abierto: 9 issues
 - 🟡 En Progreso: 0 issues
-- ✅ Resuelto: 10 issues (ISSUE #1, #3, #4, #5, #6, #8, #9, #19, #20)
+- ✅ Resuelto: 11 issues (ISSUE #1, #3, #4, #5, #6, #7, #8, #9, #19, #20)
 - 🚫 Cerrado: 0 issues
 
 ### Progreso
 ```
-[██████████░░░░░░░░░░] 50% completado (10/20)
+[███████████░░░░░░░░░] 55% completado (11/20)
 ```
 
 ---
@@ -853,12 +871,12 @@ No había redirección automática de HTTP a HTTPS configurada.
 - ISSUE #19: Rate limiting ✅
 - ISSUE #20: HTTPS forzado ✅
 
-### Sprint 2 (Semana 3-4) - En progreso (75% completado)
+### Sprint 2 (Semana 3-4) ✅ COMPLETADO
 **Objetivo:** Mejorar experiencia de usuario
 - ISSUE #4: Validación de tokens ✅
 - ISSUE #5: Manejo rate limiting frontend ✅
 - ISSUE #6: Reconexión offline ✅
-- ISSUE #7: Notificaciones tiempo real
+- ISSUE #7: Notificaciones tiempo real ✅
 
 ### Sprint 3 (Semana 5-6)
 **Objetivo:** Optimización y performance

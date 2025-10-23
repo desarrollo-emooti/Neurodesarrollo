@@ -13,21 +13,24 @@ import {
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useAppStore from '../store/appStore';
+import { useNotifications } from '../hooks/useNotifications';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 
 const Header = () => {
   const { user, logout } = useAuthStore();
-  const { 
-    sidebarOpen, 
-    toggleSidebar, 
-    theme, 
-    setTheme, 
-    notifications,
+  const {
+    sidebarOpen,
+    toggleSidebar,
+    theme,
+    setTheme,
     searchQuery,
-    setSearchQuery 
+    setSearchQuery
   } = useAppStore();
+
+  // Use notifications hook with 60 second polling interval
+  const { unreadCount } = useNotifications(60000);
 
   const handleLogout = async () => {
     await logout();
@@ -36,8 +39,6 @@ const Header = () => {
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
-
-  const unreadNotifications = notifications.filter(n => !n.read).length;
 
   return (
     <header className="bg-white/90 backdrop-blur-sm border-b border-slate-200 shadow-sm">
@@ -86,17 +87,16 @@ const Header = () => {
           <div className="relative">
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="w-5 h-5" />
-              {unreadNotifications > 0 && (
-                <Badge 
-                  variant="destructive" 
+              {unreadCount > 0 && (
+                <Badge
+                  variant="destructive"
                   className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-xs"
                 >
-                  {unreadNotifications}
+                  {unreadCount}
                 </Badge>
               )}
             </Button>
           </div>
-
           {/* Settings */}
           <Button variant="ghost" size="icon">
             <Settings className="w-5 h-5" />
