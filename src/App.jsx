@@ -11,6 +11,12 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import useAuthStore from './store/authStore';
 import useAppStore from './store/appStore';
 
+// Sentry initialization
+import { initSentry, setUser, clearUser } from './config/sentry';
+
+// Initialize Sentry
+initSentry();
+
 // Components (eager load - necesarios inmediatamente)
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -51,7 +57,7 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { isAuthenticated, isLoading, initializeAuth } = useAuthStore();
+  const { isAuthenticated, isLoading, initializeAuth, user } = useAuthStore();
   const { theme } = useAppStore();
 
   useEffect(() => {
@@ -63,6 +69,15 @@ function App() {
     // Apply theme to document
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
+
+  useEffect(() => {
+    // Set or clear Sentry user context
+    if (isAuthenticated && user) {
+      setUser(user);
+    } else {
+      clearUser();
+    }
+  }, [isAuthenticated, user]);
 
   if (isLoading) {
     return <LoadingSpinner />;

@@ -40,6 +40,7 @@ import { apiLimiter, publicLimiter } from './middleware/rateLimiter';
 // Import services
 import { logger } from './utils/logger';
 import { connectDatabase } from './config/database';
+import { initSentry, sentryRequestHandler, sentryTracingHandler, sentryErrorHandler } from './config/sentry';
 
 // Load environment variables
 dotenv.config();
@@ -48,6 +49,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env['PORT'] || 3000;
 const API_VERSION = process.env['API_VERSION'] || 'v1';
+
+// Initialize Sentry (must be first, before other middleware)
+initSentry(app);
 
 // Initialize Prisma Client
 export const prisma = new PrismaClient({
@@ -124,6 +128,10 @@ if (process.env['NODE_ENV'] !== 'development') {
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Sentry request and tracing handlers (must be after body parser, before routes)
+app.use(sentryRequestHandler());
+app.use(sentryTracingHandler());
 
 // Compression middleware
 app.use(compression());
@@ -209,6 +217,9 @@ app.use('*', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Sentry error handler (must be before other error handlers)
+app.use(sentryErrorHandler());
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
