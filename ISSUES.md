@@ -13,8 +13,8 @@
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
 | 🟠 Alta | 7 | 0 | 0 | 7 |
 | 🟡 Media | 5 | 0 | 0 | 5 |
-| 🟢 Baja | 8 | 5 | 0 | 3 |
-| **TOTAL** | **20** | **5** | **0** | **16** |
+| 🟢 Baja | 8 | 4 | 0 | 4 |
+| **TOTAL** | **20** | **4** | **0** | **17** |
 
 ---
 
@@ -892,34 +892,107 @@ La aplicación no funciona como PWA:
 
 ### ISSUE #16: Sin logs centralizados en producción
 **Categoría:** Backend - Monitoring
-**Estado:** 🟢 Abierto
+**Estado:** ✅ Resuelto (27 Oct 2025)
+**Resuelto en:** commit [pendiente]
 **Detectado:** Revisión de infraestructura (22 Oct 2025)
 
 **Descripción:**
-Los logs de Winston solo van a archivos locales. En producción necesitamos:
+Los logs de Winston solo iban a archivos locales sin rotación. En producción se necesitaban:
 - Logs centralizados
 - Búsqueda y filtrado
 - Alertas en errores críticos
 - Retención configurable
 
-**Solución propuesta:**
-Opción 1 - Papertrail:
-- Servicio SaaS simple
-- Integración fácil con Winston
-- Plan gratuito disponible
+**Solución implementada:**
 
-Opción 2 - ELK Stack:
-- Elasticsearch + Logstash + Kibana
-- Más complejo pero más potente
-- Requiere infraestructura propia
+1. **Rotación automática de logs** (`backend/src/utils/logger.ts`):
+   - Implementado `winston-daily-rotate-file`
+   - Archivos separados por tipo:
+     * `error-*.log` - Solo errores (retención 30 días, max 20MB)
+     * `combined-*.log` - Todos los logs (retención 14 días, max 20MB)
+     * `http-*.log` - Requests HTTP (retención 7 días, max 20MB)
+     * `exceptions-*.log` - Excepciones no capturadas (retención 30 días)
+     * `rejections-*.log` - Promise rejections (retención 30 días)
+   - Compresión gzip automática de archivos rotados
+   - Rotación diaria con patrón `YYYY-MM-DD`
 
-Opción 3 - CloudWatch (si en AWS):
-- Integrado con infraestructura
-- Costo razonable
+2. **Formateo estructurado**:
+   - Logs en JSON para producción (fácil parsing)
+   - Logs human-readable con colores para desarrollo
+   - Metadata automática: service, environment, timestamp
+   - Stack traces completos para errores
+   - Errores con contexto enriquecido
 
-**Estimación:** 4-6 horas (Papertrail) o 12-16 horas (ELK)
-**Asignado a:** Pendiente
-**Nota:** Decidir antes de ir a producción
+3. **Soporte para múltiples backends de logging**:
+   - **Papertrail** (vía Syslog/TLS) - SaaS simple, plan gratuito 100MB/mes
+   - **Better Stack** (vía HTTP) - UI moderna, plan gratuito 1GB/mes
+   - **CloudWatch** (preparado para implementar si usan AWS)
+   - **Archivos locales** (siempre activo como fallback)
+
+4. **Variables de entorno** (`backend/.env.example`):
+   ```bash
+   LOG_LEVEL=debug                    # debug | info | warn | error
+   LOG_SERVICE=local                  # local | papertrail | betterstack
+   APP_NAME=emooti-backend
+   PAPERTRAIL_HOST=logs7.papertrailapp.com
+   PAPERTRAIL_PORT=12345
+   BETTERSTACK_SOURCE_TOKEN=your_token_here
+   ```
+
+5. **Helper methods** para logging estructurado:
+   ```typescript
+   logWithContext('info', 'Usuario creado', { userId: user.id });
+   logError('Error en BD', error, { userId: user.id });
+   logHttp('POST', '/api/users', 201, 45, user.id);
+   ```
+
+6. **Documentación completa** (`backend/LOGGING.md`):
+   - Guía de configuración para Papertrail
+   - Guía de configuración para Better Stack
+   - Guía de configuración para CloudWatch
+   - Ejemplos de búsqueda de logs
+   - Configuración de alertas
+   - Mejores prácticas
+   - Estimaciones de costos
+
+**Características implementadas:**
+- ✅ Rotación diaria con retención configurable
+- ✅ Compresión gzip automática
+- ✅ Logs estructurados (JSON) en producción
+- ✅ Separación de logs por tipo (error, http, combined)
+- ✅ Metadata automática (service, environment)
+- ✅ Stack traces completos
+- ✅ Soporte para Papertrail (opcional)
+- ✅ Soporte para Better Stack (opcional)
+- ✅ Preparado para CloudWatch (opcional)
+- ✅ Helper methods para logging estructurado
+- ✅ Documentación completa
+
+**Paquetes instalados:**
+- `winston-daily-rotate-file` - Rotación de archivos
+- `winston-syslog` - Transporte Syslog para Papertrail
+- `@logtail/winston` - Transporte para Better Stack
+
+**Beneficios conseguidos:**
+- Logs organizados y rotados automáticamente
+- Fácil integración con servicios de logging (Papertrail, Better Stack)
+- Búsqueda eficiente con formato JSON estructurado
+- Reducción de espacio en disco (compresión + retención)
+- Configuración flexible vía variables de entorno
+- No vendor lock-in (soporta múltiples backends)
+
+**Próximos pasos opcionales:**
+- Configurar Papertrail o Better Stack en producción
+- Implementar alertas para errores críticos
+- Integrar con Slack/Email para notificaciones
+- Añadir dashboards personalizados
+
+**Tiempo invertido:** 4 horas (implementación + documentación)
+**Prioridad:** Baja → Media para producción ✅
+**Referencias:**
+- `backend/src/utils/logger.ts` - Configuración principal
+- `backend/LOGGING.md` - Documentación completa
+- `backend/.env.example` - Variables de configuración
 
 ---
 
