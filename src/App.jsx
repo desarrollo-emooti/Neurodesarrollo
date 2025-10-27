@@ -14,6 +14,9 @@ import useAppStore from './store/appStore';
 // Sentry initialization
 import { initSentry, setUser, clearUser } from './config/sentry';
 
+// i18n initialization
+import './i18n/config';
+
 // Initialize Sentry
 initSentry();
 

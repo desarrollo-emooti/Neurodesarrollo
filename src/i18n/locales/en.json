@@ -1,0 +1,82 @@
+{
+  "app": {
+    "name": "EMOOTI",
+    "fullName": "EMOOTI - Child Neurodevelopment",
+    "description": "Child Neurodevelopment Management System"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "actions": "Actions"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "students": "Students",
+    "centers": "Centers",
+    "tests": "Tests",
+    "testAssignments": "Assignments",
+    "testResults": "Results",
+    "emotiTests": "EMOOTI Tests",
+    "agenda": "Schedule",
+    "devices": "Devices",
+    "inventory": "Inventory",
+    "subscriptions": "Subscriptions",
+    "invoices": "Invoices",
+    "security": "Security",
+    "configuration": "Configuration",
+    "statistics": "Statistics",
+    "profile": "Profile"
+  },
+  "auth": {
+    "login": "Sign In",
+    "logout": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "rememberMe": "Remember Me",
+    "forgotPassword": "Forgot your password?",
+    "loginWithGoogle": "Continue with Google"
+  },
+  "dashboard": {
+    "welcome": "Welcome",
+    "totalUsers": "Total Users",
+    "activeStudents": "Active Students",
+    "completedTests": "Completed Tests",
+    "pendingTests": "Pending Tests"
+  },
+  "users": {
+    "title": "User Management",
+    "add": "Add User",
+    "edit": "Edit User",
+    "fullName": "Full Name",
+    "email": "Email",
+    "userType": "User Type",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "students": {
+    "title": "Student Management",
+    "add": "Add Student",
+    "edit": "Edit Student",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "dni": "ID Number",
+    "birthDate": "Date of Birth",
+    "center": "Center"
+  }
+}

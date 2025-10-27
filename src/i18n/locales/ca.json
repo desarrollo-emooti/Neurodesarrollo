@@ -1,0 +1,82 @@
+{
+  "app": {
+    "name": "EMOOTI",
+    "fullName": "EMOOTI - Neurodesenvolupament Infantil",
+    "description": "Sistema de Gestió del Neurodesenvolupament Infantil"
+  },
+  "common": {
+    "loading": "Carregant...",
+    "save": "Desar",
+    "cancel": "Cancel·lar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Cercar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "back": "Tornar",
+    "next": "Següent",
+    "previous": "Anterior",
+    "confirm": "Confirmar",
+    "yes": "Sí",
+    "no": "No",
+    "actions": "Accions"
+  },
+  "nav": {
+    "dashboard": "Tauler",
+    "users": "Usuaris",
+    "students": "Estudiants",
+    "centers": "Centres",
+    "tests": "Proves",
+    "testAssignments": "Assignacions",
+    "testResults": "Resultats",
+    "emotiTests": "Tests EMOOTI",
+    "agenda": "Agenda",
+    "devices": "Dispositius",
+    "inventory": "Inventari",
+    "subscriptions": "Subscripcions",
+    "invoices": "Factures",
+    "security": "Seguretat",
+    "configuration": "Configuració",
+    "statistics": "Estadístiques",
+    "profile": "Perfil"
+  },
+  "auth": {
+    "login": "Iniciar Sessió",
+    "logout": "Tancar Sessió",
+    "email": "Email",
+    "password": "Contrasenya",
+    "rememberMe": "Recorda'm",
+    "forgotPassword": "Has oblidat la contrasenya?",
+    "loginWithGoogle": "Continuar amb Google"
+  },
+  "dashboard": {
+    "welcome": "Benvingut",
+    "totalUsers": "Total d'Usuaris",
+    "activeStudents": "Estudiants Actius",
+    "completedTests": "Proves Completades",
+    "pendingTests": "Proves Pendents"
+  },
+  "users": {
+    "title": "Gestió d'Usuaris",
+    "add": "Afegir Usuari",
+    "edit": "Editar Usuari",
+    "fullName": "Nom Complet",
+    "email": "Email",
+    "userType": "Tipus d'Usuari",
+    "status": "Estat",
+    "active": "Actiu",
+    "inactive": "Inactiu"
+  },
+  "students": {
+    "title": "Gestió d'Estudiants",
+    "add": "Afegir Estudiant",
+    "edit": "Editar Estudiant",
+    "firstName": "Nom",
+    "lastName": "Cognoms",
+    "dni": "DNI/NIE",
+    "birthDate": "Data de Naixement",
+    "center": "Centre"
+  }
+}
