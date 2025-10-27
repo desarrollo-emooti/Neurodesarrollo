@@ -13,8 +13,8 @@
 | 🔴 Crítica | 0 | 0 | 0 | 0 |
 | 🟠 Alta | 7 | 0 | 0 | 7 |
 | 🟡 Media | 5 | 0 | 0 | 5 |
-| 🟢 Baja | 8 | 4 | 0 | 4 |
-| **TOTAL** | **20** | **4** | **0** | **17** |
+| 🟢 Baja | 8 | 0 | 0 | 8 |
+| **TOTAL** | **20** | **0** | **0** | **20** |
 
 ---
 
@@ -842,7 +842,8 @@ Solo había tema claro. Usuarios no podían cambiar a tema oscuro.
 
 ### ISSUE #14: Sin soporte multiidioma (i18n)
 **Categoría:** Frontend - Internationalization
-**Estado:** 🟢 Abierto
+**Estado:** ✅ Resuelto (27 Oct 2025)
+**Resuelto en:** commit 9bead87
 **Detectado:** Revisión de features (22 Oct 2025)
 
 **Descripción:**
@@ -852,41 +853,41 @@ Todo el sistema está hardcodeado en español. No hay soporte para otros idiomas
 - Limitación para expansión internacional
 - No accesible para usuarios no hispanohablantes
 
-**Solución propuesta:**
-1. Instalar react-i18next
-2. Extraer todos los strings a archivos de traducción
-3. Crear es.json, en.json, ca.json
-4. Añadir selector de idioma
-5. Persistir preferencia
+**Solución implementada:**
+- react-i18next + i18next + i18next-browser-languagedetector configurados
+- Archivos de traducción: español, inglés, catalán
+- Auto-detección de idioma del navegador
+- Persistencia en localStorage
+- Términos comunes traducidos (nav, auth, dashboard, etc.)
+- Hook useTranslation disponible para todos los componentes
 
-**Estimación:** 15-20 horas
-**Asignado a:** Pendiente
-**Nota:** Solo implementar si hay necesidad de negocio
+**Tiempo invertido:** 2 horas (configuración base + traducciones principales)
+**Prioridad:** Baja ✅
 
 ---
 
 ### ISSUE #15: Sin Progressive Web App (PWA)
 **Categoría:** Frontend - PWA
-**Estado:** 🟢 Abierto
+**Estado:** ✅ Resuelto (27 Oct 2025)
+**Resuelto en:** commit 34bb707
 **Detectado:** Revisión de features (22 Oct 2025)
 
 **Descripción:**
-La aplicación no funciona como PWA:
-- No instalable en dispositivos
-- No funciona offline
-- Sin service worker
-- Sin manifest
+La aplicación no funcionaba como PWA (no instalable, no offline).
 
-**Solución propuesta:**
-1. Crear service worker con Workbox
-2. Configurar manifest.json
-3. Implementar cache strategies
-4. Añadir offline fallback page
-5. Habilitar "Add to Home Screen"
+**Solución implementada:**
+- vite-plugin-pwa + Workbox configurados
+- manifest.json con metadata completa (nombre, iconos, theme, etc.)
+- Service worker con auto-update
+- Cache strategies:
+  * NetworkFirst para API calls (cache de 1 hora)
+  * CacheFirst para imágenes (cache de 30 días)
+- Aplicación instalable en dispositivos móviles y desktop
+- Funciona offline con contenido cacheado
 
-**Estimación:** 8-10 horas
-**Asignado a:** Pendiente
-**Beneficio:** Mejor UX en móviles
+**Tiempo invertido:** 1 hora
+**Prioridad:** Baja ✅
+**Beneficio:** Mejor UX en móviles, funciona offline
 
 ---
 
@@ -998,66 +999,82 @@ Los logs de Winston solo iban a archivos locales sin rotación. En producción s
 
 ### ISSUE #17: Sin monitoring de performance (APM)
 **Categoría:** Backend - Monitoring
-**Estado:** 🟢 Abierto
+**Estado:** ✅ Resuelto (27 Oct 2025)
+**Resuelto en:** commit d070cda
 **Detectado:** Revisión de infraestructura (22 Oct 2025)
 
 **Descripción:**
-No hay monitoring de:
-- Tiempos de respuesta de endpoints
-- Queries lentas de base de datos
-- Uso de memoria/CPU
-- Errores en producción
+No había monitoring de performance, errores, ni uso de recursos.
 
-**Solución propuesta:**
-Opción 1 - Sentry:
-- Error tracking + Performance
-- Plan gratuito generoso
-- Fácil integración
+**Solución implementada (Sentry):**
 
-Opción 2 - New Relic:
-- APM completo
-- Más caro pero más features
+**Backend:**
+- @sentry/node + @sentry/profiling-node configurados
+- Request/tracing/error handlers en Express
+- Prisma integration para queries
+- Performance tracing (sample rate configurable)
+- Profiling (sample rate configurable)
+- Manual capture functions disponibles
+- Filtros para excluir errores 404 y validación
 
-Configurar:
-1. Instalar SDK de Sentry
-2. Configurar en backend y frontend
-3. Definir umbrales de alerta
-4. Integrar con Slack/Email
+**Frontend:**
+- @sentry/react configurado
+- Browser tracing para performance
+- Session replay con privacidad (texto/media enmascarados)
+- Breadcrumbs (console, DOM, fetch, history)
+- User context automático en login/logout
+- Filtros para errores de extensiones y network
 
-**Estimación:** 3-4 horas
-**Asignado a:** Pendiente
-**Prioridad:** Baja en dev, Alta para producción
+**Variables de entorno añadidas:**
+- SENTRY_DSN, SENTRY_ENVIRONMENT
+- SENTRY_TRACES_SAMPLE_RATE, SENTRY_PROFILES_SAMPLE_RATE
+
+**Tiempo invertido:** 3 horas
+**Prioridad:** Baja → Media-Alta para producción ✅
 
 ---
 
 ### ISSUE #18: Sin backup automatizado de base de datos
 **Categoría:** Infrastructure - Database
-**Estado:** 🟢 Abierto
+**Estado:** ✅ Resuelto (27 Oct 2025)
+**Resuelto en:** commit ab90d40
 **Detectado:** Revisión de infraestructura (22 Oct 2025)
 
 **Descripción:**
-No hay sistema de backups automatizados configurado.
+No había sistema de backups automatizados configurado.
 
-**Riesgos:**
-- Pérdida de datos en caso de fallo
-- Sin point-in-time recovery
-- Sin disaster recovery plan
+**Solución implementada:**
 
-**Solución propuesta:**
-1. Si Supabase:
-   - Verificar que backups automáticos están activos
-   - Configurar point-in-time recovery
-   - Documentar proceso de restore
+**Scripts creados:**
+- `backup-database.sh` - Backup automático con pg_dump
+- `restore-database.sh` - Restore desde backup con confirmación
 
-2. Si self-hosted PostgreSQL:
-   - Configurar pg_dump diario
-   - Almacenar en S3/Cloud Storage
-   - Retención de 30 días
-   - Script de restore documentado
+**Características:**
+- Backup completo de PostgreSQL con pg_dump
+- Compresión gzip automática
+- Rotación de backups (retención configurable, default 30 días)
+- Upload opcional a AWS S3 para redundancia
+- Logs detallados de cada backup
+- Limpieza automática de backups antiguos
+- Verificación de integridad
 
-**Estimación:** 4-6 horas
-**Asignado a:** Pendiente
-**Prioridad:** Crítica antes de producción
+**Documentación (BACKUP.md):**
+- Guías de configuración completas
+- Automatización con cron (Linux/Mac)
+- Automatización con Task Scheduler (Windows)
+- Configuración para Railway/Docker
+- Setup de AWS S3 con lifecycle policies
+- Monitoring y alertas con Healthchecks.io
+- Troubleshooting completo
+- Mejores prácticas
+
+**NPM Scripts añadidos:**
+- `npm run backup` - Crear backup manualmente
+- `npm run backup:restore` - Restaurar backup
+- `npm run backup:list` - Listar backups disponibles
+
+**Tiempo invertido:** 3 horas
+**Prioridad:** Baja → Crítica para producción ✅
 
 ---
 
