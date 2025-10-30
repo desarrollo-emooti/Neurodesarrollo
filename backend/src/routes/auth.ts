@@ -182,7 +182,7 @@ const generateRefreshToken = (user: any) => {
  *       401:
  *         description: Credenciales inválidas
  *       429:
- *         description: Demasiados intentos de login (rate limit: 5/15min)
+ *         description: "Demasiados intentos de login (rate limit: 5/15min)"
  */
 // Email/Password Login (with rate limiting)
 router.post('/login', loginLimiter, asyncHandler(async (req: Request, res: Response) => {
@@ -422,7 +422,7 @@ router.get('/me', asyncHandler(async (req: any, res: Response) => {
  *       401:
  *         description: Refresh token inválido o expirado
  *       429:
- *         description: Demasiados intentos (rate limit: 3/hora)
+ *         description: "Demasiados intentos (rate limit: 3/hora)"
  */
 // Refresh token (with rate limiting)
 router.post('/refresh', authLimiter, asyncHandler(async (req: Request, res: Response) => {

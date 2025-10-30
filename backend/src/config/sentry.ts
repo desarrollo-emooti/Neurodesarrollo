@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/node';
-import { ProfilingIntegration } from '@sentry/profiling-node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { logger } from '../utils/logger';
 
 /**
@@ -33,16 +33,16 @@ export const initSentry = (app: any) => {
       // Integrations
       integrations: [
         // Enable HTTP calls tracing
-        new Sentry.Integrations.Http({ tracing: true }),
+        Sentry.httpIntegration({ tracing: true }),
 
         // Enable Express.js middleware tracing
-        new Sentry.Integrations.Express({ app }),
+        Sentry.expressIntegration({ app }),
 
         // Enable profiling
-        new ProfilingIntegration(),
+        nodeProfilingIntegration(),
 
-        // Enable Prisma tracing (if using Prisma)
-        new Sentry.Integrations.Prisma({ client: undefined }),
+        // Enable Prisma tracing
+        Sentry.prismaIntegration(),
       ],
 
       // Performance Monitoring
@@ -96,7 +96,7 @@ export const sentryRequestHandler = () => {
   if (!SENTRY_DSN) {
     return (req: any, res: any, next: any) => next();
   }
-  return Sentry.Handlers.requestHandler();
+  return Sentry.expressErrorHandler();
 };
 
 // Sentry tracing handler
@@ -104,7 +104,8 @@ export const sentryTracingHandler = () => {
   if (!SENTRY_DSN) {
     return (req: any, res: any, next: any) => next();
   }
-  return Sentry.Handlers.tracingHandler();
+  // In Sentry v8, tracing is handled automatically by expressIntegration
+  return (req: any, res: any, next: any) => next();
 };
 
 // Sentry error handler (must be before other error handlers)
@@ -112,7 +113,7 @@ export const sentryErrorHandler = () => {
   if (!SENTRY_DSN) {
     return (err: any, req: any, res: any, next: any) => next(err);
   }
-  return Sentry.Handlers.errorHandler();
+  return Sentry.expressErrorHandler();
 };
 
 // Manual error capture

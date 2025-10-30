@@ -30,10 +30,10 @@ router.get('/dashboard', asyncHandler(async (req: any, res: Response) => {
         }
       });
       const completedTests = await prisma.testAssignment.count({
-        where: { status: 'COMPLETED' }
+        where: { testStatus: 'SI' }
       });
       const pendingTests = await prisma.testAssignment.count({
-        where: { status: { in: ['PENDING', 'IN_PROGRESS'] } }
+        where: { testStatus: 'PENDIENTE' }
       });
 
       stats = {
@@ -50,7 +50,7 @@ router.get('/dashboard', asyncHandler(async (req: any, res: Response) => {
     else if (userType === 'CLINICA') {
       // Get students assigned to this clinician through test assignments
       const assignedTestAssignments = await prisma.testAssignment.findMany({
-        where: { assignedTo: user.id },
+        where: { assignedBy: user.id },
         select: { studentId: true },
         distinct: ['studentId'],
       });
@@ -58,23 +58,23 @@ router.get('/dashboard', asyncHandler(async (req: any, res: Response) => {
 
       const pendingEvaluations = await prisma.testAssignment.count({
         where: {
-          assignedTo: user.id,
-          status: { in: ['PENDING', 'IN_PROGRESS'] }
+          assignedBy: user.id,
+          testStatus: 'PENDIENTE'
         }
       });
 
       const completedEvaluations = await prisma.testAssignment.count({
         where: {
-          assignedTo: user.id,
-          status: 'COMPLETED'
+          assignedBy: user.id,
+          testStatus: 'SI'
         }
       });
 
       // Count test results without interpretation (pending reports)
       const pendingReports = await prisma.testResult.count({
         where: {
-          testAssignment: {
-            assignedTo: user.id
+          assignment: {
+            assignedBy: user.id
           },
           interpretation: null
         }
@@ -101,13 +101,10 @@ router.get('/dashboard', asyncHandler(async (req: any, res: Response) => {
         where: {
           OR: [
             { createdBy: user.id },
-            { studentId: { in: await prisma.student.findMany({
-              where: { centerId },
-              select: { id: true }
-            }).then(students => students.map(s => s.id)) } }
+            { centerId: centerId }
           ],
-          startDateTime: { gte: now },
-          eventType: 'Evaluación'
+          startDate: { gte: now },
+          eventType: 'EVALUACION'
         }
       });
 
@@ -116,19 +113,16 @@ router.get('/dashboard', asyncHandler(async (req: any, res: Response) => {
         where: {
           OR: [
             { createdBy: user.id },
-            { studentId: { in: await prisma.student.findMany({
-              where: { centerId },
-              select: { id: true }
-            }).then(students => students.map(s => s.id)) } }
+            { centerId: centerId }
           ],
-          startDateTime: { gte: now }
+          startDate: { gte: now }
         }
       });
 
       // Count available reports (test results with interpretation for center students)
       const availableReports = await prisma.testResult.count({
         where: {
-          testAssignment: {
+          assignment: {
             student: {
               centerId
             }
@@ -148,20 +142,20 @@ router.get('/dashboard', asyncHandler(async (req: any, res: Response) => {
     // Examiner stats
     else if (userType === 'EXAMINADOR') {
       const assignedTests = await prisma.testAssignment.count({
-        where: { examinerId: user.id }
+        where: { assignedBy: user.id }
       });
 
       const completedTests = await prisma.testAssignment.count({
         where: {
-          examinerId: user.id,
-          status: 'COMPLETED'
+          assignedBy: user.id,
+          testStatus: 'SI'
         }
       });
 
       const pendingTests = await prisma.testAssignment.count({
         where: {
-          examinerId: user.id,
-          status: { in: ['PENDING', 'IN_PROGRESS'] }
+          assignedBy: user.id,
+          testStatus: 'PENDIENTE'
         }
       });
 
@@ -254,7 +248,7 @@ router.get('/dashboard-charts', asyncHandler(async (req: any, res: Response) => 
       FROM test_assignments
       WHERE completion_date >= ${last7Days}
         AND completion_date <= ${now}
-        AND test_status = 'COMPLETADO'
+        AND test_status = 'SI'
       GROUP BY DATE(completion_date)
       ORDER BY date ASC
     `;
@@ -262,11 +256,11 @@ router.get('/dashboard-charts', asyncHandler(async (req: any, res: Response) => 
     // Tests por Estado
     const testsByStatus = await Promise.all([
       prisma.testAssignment.count({ where: { testStatus: 'PENDIENTE' } }),
-      prisma.testAssignment.count({ where: { testStatus: 'EN_PROGRESO' } }),
-      prisma.testAssignment.count({ where: { testStatus: 'COMPLETADO' } }),
-    ]).then(([pending, inProgress, completed]) => [
+      prisma.testAssignment.count({ where: { testStatus: 'NO' } }),
+      prisma.testAssignment.count({ where: { testStatus: 'SI' } }),
+    ]).then(([pending, cancelled, completed]) => [
       { status: 'Pendiente', count: pending, fill: '#f59e0b' },
-      { status: 'En Progreso', count: inProgress, fill: '#3b82f6' },
+      { status: 'Cancelado', count: cancelled, fill: '#ef4444' },
       { status: 'Completado', count: completed, fill: '#10b981' },
     ]);
 

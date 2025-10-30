@@ -349,7 +349,7 @@ router.post('/chunk/finalize', verifyToken, asyncHandler(async (req: any, res: R
 
     // Esperar a que termine de escribir
     await new Promise((resolve, reject) => {
-      writeStream.on('finish', resolve);
+      writeStream.on('finish', () => resolve(undefined));
       writeStream.on('error', reject);
     });
 
