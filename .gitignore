@@ -162,6 +162,7 @@ dist/
 # Environment files
 .env*
 !.env.example
+!.env.production.example
 
 # Database files
 *.db
