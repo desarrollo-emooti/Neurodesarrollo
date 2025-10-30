@@ -237,6 +237,9 @@ backend/migration.sql
 backend/uploads/
 nul
 
+# Testing and development files
+Pruebas/
+
 # Prisma
 backend/prisma/migrations/
 
